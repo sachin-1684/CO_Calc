@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COs Calculation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+            background-color: #e3f2fd;
+        }
+        h1 {
+            color: #1565c0;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 60%;
+            margin: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #1565c0;
+            color: white;
+        }
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #1565c0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0d47a1;
+        }
+    </style>
+    <script>
+        function loadCOSelection() {
+            let selectedCOs = JSON.parse(localStorage.getItem("selectedCOs")) || {};
+            let coTotals = { CO1: 0, CO2: 0, CO3: 0, CO4: 0 , CO5: 0};
+            
+            for (let co in selectedCOs) {
+                selectedCOs[co].forEach(q => {
+                    let input = document.querySelector(`input[name='${q}']`);
+                    if (input) {
+                        coTotals[co] += parseInt(input.value) || 0;
+                    }
+                });
+            }
+            
+            for (let co in coTotals) {
+                document.getElementById(co).textContent = coTotals[co];
+            }
+            document.getElementById("totalCO").textContent = coTotals.CO1 + coTotals.CO2 + coTotals.CO3 + coTotals.CO4 + coTotals.CO5;
+        }
+        
+        function resetPage() {
+            document.querySelectorAll("input[type='number']").forEach(input => input.value = 0);
+            document.getElementById("CO1").textContent = 0;
+            document.getElementById("CO2").textContent = 0;
+            document.getElementById("CO3").textContent = 0;
+            document.getElementById("CO4").textContent = 0;
+            document.getElementById("CO5").textContent = 0;
+            document.getElementById("totalCO").textContent = 0;
+            document.getElementById("total").textContent = 0;
+        }
+        
+        function goToHomePage() {
+            window.location.href = "Conew.html";
+        }
+        
+        function updateTotal() {
+            let total = 0;
+            document.querySelectorAll("input[type='number']").forEach(input => {
+                total += parseInt(input.value) || 0;
+            });
+            document.getElementById("total").textContent = total;
+        }
+    </script>
+</head>
+<body onload="loadCOSelection()">
+    <button onclick="goToHomePage()">🏠 Home Page</button>
+    <h1>COs Calculation - Page 2</h1>
+    <div class="container">
+        <table>
+            <tr>
+                <th>Questions</th>
+                <th>Marks</th>
+            </tr>
+            <script>
+                const questions = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"];
+                questions.forEach(q => {
+                    document.write(`<tr><td>${q}</td><td><input type='number' name='${q}' value='0' oninput='updateTotal()'></td></tr>`);
+                });
+                document.write(`<tr><td><b>Total</b></td><td><b id='total'>0</b></td></tr>`);
+            </script>
+        </table>
+        <h2>CO Scores</h2>
+        <table>
+            <tr>
+                <th>CO1</th>
+                <th>CO2</th>
+                <th>CO3</th>
+                <th>CO4</th>
+                <th>CO5</th>
+                <th>Total CO</th>
+            </tr>
+            <tr>
+                <td id="CO1">0</td>
+                <td id="CO2">0</td>
+                <td id="CO3">0</td>
+                <td id="CO4">0</td>
+                <td id="CO5">0</td>
+                <td id="totalCO">0</td>
+            </tr>
+        </table>
+        <button onclick="loadCOSelection()">Calculate</button>
+        <button onclick="resetPage()">Reset</button>
+    </div>
+</body>
+</html>
