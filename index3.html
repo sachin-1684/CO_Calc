@@ -113,6 +113,11 @@
         }
 
         function saveCOSelection() {
+            let allSelectedQuestions = Object.values(selectedQuestions).flat();
+            if (allSelectedQuestions.length < questions.length) {
+                alert("Please select all questions before submitting.");
+                return;
+            }
             localStorage.setItem("selectedCOs", JSON.stringify(selectedQuestions));
             window.location.href = "page2.html";
         }
