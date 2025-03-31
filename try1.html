@@ -96,7 +96,9 @@
 
         function disableOtherCOs(question, selectedCo) {
             document.querySelectorAll(`input[data-question='${question}']`).forEach(checkbox => {
-                checkbox.disabled = checkbox.getAttribute('data-co') !== selectedCo && checkbox.checked ? false : !!selectedCOs[question];
+                if (checkbox.getAttribute('data-co') !== selectedCo) {
+                    checkbox.disabled = checkbox.checked ? false : true;
+                }
             });
         }
 
@@ -122,19 +124,13 @@
                 Object.keys(coWeights).map(co => `${co}: ${coWeights[co]} marks`).join(' | ') + "</p>";
         }
 
-        function resetCO(co) {
-            document.querySelectorAll(`input[data-co='${co}']`).forEach(checkbox => checkbox.checked = false);
-            Object.keys(selectedCOs).forEach(q => {
-                if (selectedCOs[q] === co) delete selectedCOs[q];
+        function resetColumn(co) {
+            document.querySelectorAll(`input[data-co='${co}']`).forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.disabled = false;
             });
             coWeights[co] = 0;
             saveSelections();
-            updateCOWeights();
-        }
-
-        function resetAll() {
-            localStorage.clear();
-            location.reload();
         }
 
         function saveAndProceed() {
@@ -143,24 +139,10 @@
                 return;
             }
             saveSelections();
-            window.location.href = "page3.html";
-        }
-
-        function restoreSelections() {
-            Object.keys(selectedCOs).forEach(question => {
-                let co = selectedCOs[question];
-                let checkbox = document.querySelector(`input[data-question='${question}'][data-co='${co}']`);
-                if (checkbox) checkbox.checked = true;
-            });
-            Object.keys(questionMarks).forEach(question => {
-                let select = document.querySelector(`tr[data-question='${question}'] select`);
-                if (select) select.value = questionMarks[question];
-            });
-            Object.keys(selectedCOs).forEach(question => disableOtherCOs(question, selectedCOs[question]));
+            window.location.href = "page2.html";
         }
 
         window.onload = function () {
-            restoreSelections();
             updateCOWeights();
         };
     </script>
@@ -172,11 +154,11 @@
             <tr>
                 <th>Questions</th>
                 <th>Marks</th>
-                <th>CO1</th>
-                <th>CO2</th>
-                <th>CO3</th>
-                <th>CO4</th>
-                <th>CO5</th>
+                <th>CO1 <button class="reset-btn" onclick="resetColumn('CO1')">Reset</button></th>
+                <th>CO2 <button class="reset-btn" onclick="resetColumn('CO2')">Reset</button></th>
+                <th>CO3 <button class="reset-btn" onclick="resetColumn('CO3')">Reset</button></th>
+                <th>CO4 <button class="reset-btn" onclick="resetColumn('CO4')">Reset</button></th>
+                <th>CO5 <button class="reset-btn" onclick="resetColumn('CO5')">Reset</button></th>
             </tr>
             <script>
                 const questions = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"];
@@ -194,13 +176,8 @@
         <br>
         <div id="coWeightage"></div>
         <br>
-        <button onclick="resetCO('CO1')">Reset CO1</button>
-        <button onclick="resetCO('CO2')">Reset CO2</button>
-        <button onclick="resetCO('CO3')">Reset CO3</button>
-        <button onclick="resetCO('CO4')">Reset CO4</button>
-        <button onclick="resetCO('CO5')">Reset CO5</button>
-        <button onclick="resetAll()">Reset All</button>
         <button onclick="saveAndProceed()">Submit</button>
     </div>
 </body>
 </html>
+tr

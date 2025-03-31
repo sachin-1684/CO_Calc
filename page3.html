@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COs Calculation - Page 2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #1565c0, #42a5f5);
+            color: white;
+        }
+      .red-bold {
+    color: red;
+    font-weight: bold;
+}
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            width: 80%;
+            margin: 20px auto;
+            color: black;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #1565c0;
+            color: white;
+        }
+        .summary-box {
+            background: #f1f1f1;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .co-marks-box {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            background: #f1f1f1;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+        .red-text {
+            color: black;
+            font-weight: bold;
+        }
+        button {
+            margin-top: 15px;
+            padding: 12px 25px;
+            background-color: #1565c0;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #0d47a1;
+            transform: scale(1.05);
+        }
+    </style>
+    <script>
+        let questionMarks = {};
+        let selectedCOs = {};
+        let coMarks = { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
+
+        window.onload = function () {
+            let storedMarks = localStorage.getItem("questionMarks");
+            if (storedMarks) questionMarks = JSON.parse(storedMarks);
+
+            let storedCOs = localStorage.getItem("selectedCOs");
+            if (storedCOs) selectedCOs = JSON.parse(storedCOs);
+
+            populateTable();
+        };
+
+        function populateTable() {
+            let tableBody = document.getElementById("coTableBody");
+            let totalQMarks = 0;
+
+            Object.keys(questionMarks).forEach(q => {
+                let maxMarks = questionMarks[q] || 0;
+                totalQMarks += maxMarks;
+                let co = selectedCOs[q] || "Not Assigned";
+
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${q}</td>
+                    <td>${maxMarks}</td>
+                    <td>${co}</td>
+                    <td><input type="number" min="0" max="${maxMarks}" id="${q}_marks" oninput="updateCOMarks('${q}')"></td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+           
+        }
+
+        function updateCOMarks(question) {
+            let marksInput = document.getElementById(`${question}_marks`);
+            let marks = Number(marksInput.value) || 0;
+            let assignedCO = selectedCOs[question];
+
+            if (marks > questionMarks[question]) {
+                alert(`Marks for ${question} cannot exceed ${questionMarks[question]}`);
+                marksInput.value = questionMarks[question];
+                marks = questionMarks[question];
+            }
+
+            if (assignedCO && assignedCO !== "Not Assigned") {
+                coMarks[assignedCO] = Object.keys(selectedCOs).reduce((acc, q) => {
+                    return acc + (selectedCOs[q] === assignedCO ? (Number(document.getElementById(`${q}_marks`).value) || 0) : 0);
+                }, 0);
+            }
+
+            marksInput.classList.add("red-text");
+            setTimeout(() => marksInput.classList.remove("red-text"), 1500);
+
+            updateCOWeightage();
+        }
+
+        function updateCOWeightage() {
+            document.getElementById("co1Marks").innerText = coMarks["CO1"];
+            document.getElementById("co2Marks").innerText = coMarks["CO2"];
+            document.getElementById("co3Marks").innerText = coMarks["CO3"];
+            document.getElementById("co4Marks").innerText = coMarks["CO4"];
+            document.getElementById("co5Marks").innerText = coMarks["CO5"];
+            document.getElementById("totalCOMarks").innerText = Object.values(coMarks).reduce((sum, val) => sum + val, 0);
+            document.getElementById("totalQMarks").innerText = Object.values(coMarks).reduce((sum, val) => sum + val, 0);
+        }
+
+        function resetCOMarks() {
+            Object.keys(questionMarks).forEach(q => {
+                let inputField = document.getElementById(`${q}_marks`);
+                if (inputField) inputField.value = "";
+            });
+
+            coMarks = { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
+            updateCOWeightage();
+        }
+
+        function homePage() {
+            window.location.href = "try.html";
+        }
+    </script>
+</head>
+<body>
+    <h1>CO Marks Allocation</h1>
+    <div class="container">
+        <table>
+            <tr>
+                <th>Question</th>
+                <th>Max Marks</th>
+                <th>CO Assigned</th>
+                <th>CO Marks</th>
+            </tr>
+            <tbody id="coTableBody"></tbody>
+        </table>
+
+        <div class="summary-box">
+            <p>Total Q1 - Q7 Marks: <span id="totalQMarks" class="red-bold">0</span></p>
+        </div>
+
+       <div class="co-marks-box">
+    <p><b>CO1 :</b> <span id="co1Marks" class="red-bold">0</span></p>
+    <p><b>CO2 :</b> <span id="co2Marks" class="red-bold">0</span></p>
+    <p><b>CO3 :</b> <span id="co3Marks" class="red-bold">0</span></p>
+    <p><b>CO4 :</b> <span id="co4Marks" class="red-bold">0</span></p>
+    <p><b>CO5 :</b> <span id="co5Marks" class="red-bold">0</span></p>
+</div>
+
+        <div class="summary-box">
+            <p>Total CO Marks Assigned: <span id="totalCOMarks" class="red-bold">0</span></p>
+        </div>
+
+        <button onclick="resetCOMarks()">Reset CO Marks</button>
+        <button onclick="homePage()">Home Page</button>
+    </div>
+</body>
+</html>
