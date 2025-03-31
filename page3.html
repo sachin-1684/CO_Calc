@@ -128,7 +128,7 @@
                 tableBody.appendChild(row);
             });
 
-            document.getElementById("totalQMarks").innerText = totalQMarks;
+            
         }
 
         function updateCOMarks() {
@@ -170,6 +170,7 @@
             document.getElementById("co4Marks").innerText = 0;
             document.getElementById("co5Marks").innerText = 0;
             document.getElementById("totalCOMarks").innerText = 0;
+            document.getElementById("totalQMarks").innerText = 0;
         }
 
         function homePage() {
@@ -191,7 +192,7 @@
         </table>
 
         <div class="summary-box">
-            <p>Total Q1 - Q7 Marks: <span id="totalQMarks">0</span></p>
+            <p>Total Q1 - Q7 Marks: <span id="totalQMarks" class="red-bold">0</span></p>
         </div>
 
         <div class="co-marks-box">
@@ -203,7 +204,9 @@
         </div>
 
         <div class="summary-box">
-            <p>Total CO Marks Assigned: <span id="totalCOMarks">0</span></p>
+            <p>Total CO Marks Assigned: <span id="totalCOMarks"class="red-bold">0</span></p>
+            
+
         </div>
 
         <button onclick="resetCOMarks()">Reset CO Marks</button>
