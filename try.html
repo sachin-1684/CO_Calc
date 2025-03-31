@@ -65,6 +65,11 @@
         .reset-btn:hover {
             background-color: #b71c1c;
         }
+        #coWeightage p {
+            background-color: #40b71c;
+            font-size: 18px;
+            font-weight: bold;
+        }
         @media (max-width: 600px) {
             th, td {
                 font-size: 14px;
@@ -74,16 +79,12 @@
                 width: 95%;
                 padding: 15px;
             }
-            .co-marks-box {
-                flex-direction: column;
-                align-items: center;
-            }
         }
     </style>
     <script>
         let selectedCOs = JSON.parse(localStorage.getItem("selectedCOs")) || {};
         let questionMarks = JSON.parse(localStorage.getItem("questionMarks")) || {};
-        let coWeights = JSON.parse(localStorage.getItem("coWeights")) || { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
+        let coWeights = JSON.parse(localStorage.getItem("coWeights")) || { CO1: 0,     CO2: 0,    CO3: 0,     CO4: 0,     CO5: 0 };
 
         function toggleSelection(question, co, checkbox) {
             let marks = document.querySelector(`tr[data-question='${question}'] select`).value;
@@ -133,7 +134,7 @@
         function updateCOWeights() {
             let display = document.getElementById("coWeightage");
             display.innerHTML = "<h3>Total CO Weightage</h3><p>" +
-                Object.keys(coWeights).map(co => `${co}: ${coWeights[co]} marks`).join(' | ') + "</p>";
+                Object.keys(coWeights).map(co => `<b>${co}:</b> ${coWeights[co]} marks`).join(' | ') + "</p>";
         }
 
         function resetCO(co) {
@@ -143,6 +144,7 @@
             });
             coWeights[co] = 0;
             saveSelections();
+            document.querySelectorAll(`input[data-co='${co}']`).forEach(checkbox => checkbox.disabled = false);
             updateCOWeights();
         }
 
@@ -170,7 +172,6 @@
                 let select = document.querySelector(`tr[data-question='${question}'] select`);
                 if (select) select.value = questionMarks[question];
             });
-            Object.keys(selectedCOs).forEach(question => disableOtherCOs(question, selectedCOs[question]));
         }
 
         window.onload = function () {
@@ -195,9 +196,7 @@
             <script>
                 const questions = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"];
                 questions.forEach(q => {
-                    document.write(`<tr data-question="${q}">
-                        <td>${q}</td>
-                        <td><select onchange="saveSelections()">${Array.from({ length: 11 }, (_, i) => `<option value="${i}">${i}</option>`).join('')}</select></td>`);
+                    document.write(`<tr data-question="${q}"><td>${q}</td><td><select onchange="saveSelections()">${Array.from({ length: 11 }, (_, i) => `<option value="${i}">${i}</option>`).join('')}</select></td>`);
                     ["CO1", "CO2", "CO3", "CO4", "CO5"].forEach(co => {
                         document.write(`<td><input type='checkbox' data-question='${q}' data-co='${co}' onchange="toggleSelection('${q}', '${co}', this)"></td>`);
                     });
