@@ -18,6 +18,12 @@
             font-weight: bold;
             margin-top: 20px;
         }
+        h3 {
+            font-size: 25px;
+            color: rgb(50, 50, 200);
+            font-weight: bold;
+            margin-top: 20px;
+        }
         .container {
             background: white;
             padding: 20px;
@@ -134,7 +140,8 @@
         function updateCOWeights() {
             let display = document.getElementById("coWeightage");
             display.innerHTML = "<h3>Total CO Weightage</h3><p>" +
-                Object.keys(coWeights).map(co => `<b>${co}:</b> ${coWeights[co]} marks`).join(' | ') + "</p>";
+                Object.keys(coWeights).map(co => `<b>${co}:</b> <span style="color: red;">${coWeights[co]} marks</span>`).join(' || ') + "</p>";
+
         }
 
         function resetCO(co) {
