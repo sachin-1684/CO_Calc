@@ -65,6 +65,8 @@
     </style>
     <script>
         let selectedQuestions = {}; // Store selected checkboxes
+        let questionMarks = {};
+        let coWeights = { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
 
         function toggleSelection(co, checkbox) {
             if (checkbox.checked) {
