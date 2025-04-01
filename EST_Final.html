@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COs Calculation - Page 1</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #1565c0, #42a5f5);
+            color: white;
+        }
+        h1 {
+            font-size: 36px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            width: 80%;
+            margin: 20px auto;
+            color: black;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+            font-size: 16px;
+        }
+        th {
+            background-color: #1565c0;
+            color: white;
+        }
+        button {
+            margin-top: 15px;
+            padding: 12px 20px;
+            background-color: #1565c0;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #0d47a1;
+            transform: scale(1.05);
+        }
+        .reset-btn {
+            background-color: #d32f2f;
+        }
+        .reset-btn:hover {
+            background-color: #b71c1c;
+        }
+        #coWeightage p {
+            background-color: #40b71c;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        @media (max-width: 600px) {
+            th, td {
+                font-size: 14px;
+                padding: 8px;
+            }
+            .container {
+                width: 95%;
+                padding: 15px;
+            }
+        }
+    </style>
+    <script>
+        let selectedCOs = JSON.parse(localStorage.getItem("selectedCOs")) || {};
+        let questionMarks = JSON.parse(localStorage.getItem("questionMarks")) || {};
+        let coWeights = JSON.parse(localStorage.getItem("coWeights")) || { CO1: 0,     CO2: 0,    CO3: 0,     CO4: 0,     CO5: 0 };
+
+        function toggleSelection(question, co, checkbox) {
+            let marks = document.querySelector(`tr[data-question='${question}'] select`).value;
+            if (marks == 0) {
+                alert("Please enter marks first.");
+                checkbox.checked = false;
+                return;
+            }
+            if (checkbox.checked) {
+                if (selectedCOs[question]) {
+                    let prevCO = selectedCOs[question];
+                    document.querySelector(`input[data-question='${question}'][data-co='${prevCO}']`).checked = false;
+                    coWeights[prevCO] -= questionMarks[question] || 0;
+                }
+                selectedCOs[question] = co;
+                coWeights[co] += parseInt(marks);
+            } else {
+                coWeights[selectedCOs[question]] -= questionMarks[question] || 0;
+                delete selectedCOs[question];
+            }
+            disableOtherCOs(question, co);
+            saveSelections();
+        }
+
+        function disableOtherCOs(question, selectedCo) {
+            document.querySelectorAll(`input[data-question='${question}']`).forEach(checkbox => {
+                checkbox.disabled = checkbox.getAttribute('data-co') !== selectedCo && checkbox.checked ? false : !!selectedCOs[question];
+            });
+        }
+
+        function saveSelections() {
+            document.querySelectorAll("tr[data-question]").forEach(row => {
+                let qId = row.getAttribute("data-question");
+                let markValue = parseInt(row.querySelector("select").value) || 0;
+                if (selectedCOs[qId]) {
+                    coWeights[selectedCOs[qId]] -= questionMarks[qId] || 0;
+                    coWeights[selectedCOs[qId]] += markValue;
+                }
+                questionMarks[qId] = markValue;
+            });
+            localStorage.setItem("selectedCOs", JSON.stringify(selectedCOs));
+            localStorage.setItem("questionMarks", JSON.stringify(questionMarks));
+            localStorage.setItem("coWeights", JSON.stringify(coWeights));
+            updateCOWeights();
+        }
+
+        function updateCOWeights() {
+            let display = document.getElementById("coWeightage");
+            display.innerHTML = "<h3>Total CO Weightage</h3><p>" +
+                Object.keys(coWeights).map(co => `<b>${co}:</b> ${coWeights[co]} marks`).join(' | ') + "</p>";
+        }
+
+        function resetCO(co) {
+            document.querySelectorAll(`input[data-co='${co}']`).forEach(checkbox => checkbox.checked = false);
+            Object.keys(selectedCOs).forEach(q => {
+                if (selectedCOs[q] === co) delete selectedCOs[q];
+            });
+            coWeights[co] = 0;
+            saveSelections();
+            document.querySelectorAll(`input[data-co='${co}']`).forEach(checkbox => checkbox.disabled = false);
+            updateCOWeights();
+        }
+
+        function resetAll() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        function saveAndProceed() {
+            if (Object.keys(selectedCOs).length < 7) {
+                alert("Please map all questions to a CO before submitting.");
+                return;
+            }
+            saveSelections();
+            window.location.href = "page3.html";
+        }
+
+        function restoreSelections() {
+            Object.keys(selectedCOs).forEach(question => {
+                let co = selectedCOs[question];
+                let checkbox = document.querySelector(`input[data-question='${question}'][data-co='${co}']`);
+                if (checkbox) checkbox.checked = true;
+            });
+            Object.keys(questionMarks).forEach(question => {
+                let select = document.querySelector(`tr[data-question='${question}'] select`);
+                if (select) select.value = questionMarks[question];
+            });
+        }
+
+        window.onload = function () {
+            restoreSelections();
+            updateCOWeights();
+        };
+    </script>
+</head>
+<body>
+    <h1>Welcome to Chandigarh University Exams</h1>
+    <div class="container">
+        <table>
+            <tr>
+                <th>Questions</th>
+                <th>Marks</th>
+                <th>CO1</th>
+                <th>CO2</th>
+                <th>CO3</th>
+                <th>CO4</th>
+                <th>CO5</th>
+            </tr>
+            <script>
+                const questions = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Q11", "Q12", "Q13"];
+                questions.forEach(q => {
+                    document.write(`<tr data-question="${q}"><td>${q}</td><td><select onchange="saveSelections()">${Array.from({ length: 11 }, (_, i) => `<option value="${i}">${i}</option>`).join('')}</select></td>`);
+                    ["CO1", "CO2", "CO3", "CO4", "CO5"].forEach(co => {
+                        document.write(`<td><input type='checkbox' data-question='${q}' data-co='${co}' onchange="toggleSelection('${q}', '${co}', this)"></td>`);
+                    });
+                    document.write(`</tr>`);
+                });
+            </script>
+        </table>
+        <br>
+        <div id="coWeightage"></div>
+        <br>
+        <button onclick="resetCO('CO1')">Reset CO1</button>
+        <button onclick="resetCO('CO2')">Reset CO2</button>
+        <button onclick="resetCO('CO3')">Reset CO3</button>
+        <button onclick="resetCO('CO4')">Reset CO4</button>
+        <button onclick="resetCO('CO5')">Reset CO5</button>
+        <button onclick="resetAll()">Reset All</button>
+        <button onclick="saveAndProceed()">Submit</button>
+    </div>
+</body>
+</html>
