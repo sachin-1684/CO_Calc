@@ -10,17 +10,11 @@
             text-align: center;
             margin: 0;
             padding: 0;
-            background: linear-gradient(to right, red, red);
+            background: linear-gradient(to right, #1565c0, #42a5f5);
             color: white;
         }
         h1 {
             font-size: 36px;
-            font-weight: bold;
-            margin-top: 20px;
-        }
-        h3 {
-            font-size: 25px;
-            color: rgb(50, 50, 200);
             font-weight: bold;
             margin-top: 20px;
         }
@@ -47,13 +41,13 @@
             font-size: 16px;
         }
         th {
-            background-color: #c01520;
+            background-color: #1565c0;
             color: white;
         }
         button {
             margin-top: 15px;
             padding: 12px 20px;
-            background-color: #c01520;
+            background-color: #1565c0;
             color: white;
             border: none;
             border-radius: 6px;
@@ -72,7 +66,7 @@
             background-color: #b71c1c;
         }
         #coWeightage p {
-            
+            background-color: #40b71c;
             font-size: 18px;
             font-weight: bold;
         }
@@ -120,6 +114,10 @@
                 checkbox.disabled = checkbox.getAttribute('data-co') !== selectedCo && checkbox.checked ? false : !!selectedCOs[question];
             });
         }
+        function mainPage() {
+            
+            window.location.href = "index.html";
+        }
 
         function saveSelections() {
             document.querySelectorAll("tr[data-question]").forEach(row => {
@@ -140,8 +138,7 @@
         function updateCOWeights() {
             let display = document.getElementById("coWeightage");
             display.innerHTML = "<h3>Total CO Weightage</h3><p>" +
-                Object.keys(coWeights).map(co => `<b>${co}:</b> <span style="color: red;">${coWeights[co]} marks</span>`).join(' || ') + "</p>";
-
+                Object.keys(coWeights).map(co => `<b>${co}:</b> ${coWeights[co]} marks`).join(' | ') + "</p>";
         }
 
         function resetCO(co) {
@@ -166,7 +163,7 @@
                 return;
             }
             saveSelections();
-            window.location.href = "newdropdown.html";
+            window.location.href = "EST_CO_Calc.html";
         }
 
         function restoreSelections() {
@@ -189,6 +186,7 @@
 </head>
 <body>
     <h1>Welcome to Chandigarh University Exams</h1>
+    <button onclick="mainPage()">Main Dashboard</button>
     <div class="container">
         <table>
             <tr>
@@ -201,7 +199,7 @@
                 <th>CO5</th>
             </tr>
             <script>
-                const questions = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"];
+                const questions = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Q11", "Q12", "Q13"];
                 questions.forEach(q => {
                     document.write(`<tr data-question="${q}"><td>${q}</td><td><select onchange="saveSelections()">${Array.from({ length: 11 }, (_, i) => `<option value="${i}">${i}</option>`).join('')}</select></td>`);
                     ["CO1", "CO2", "CO3", "CO4", "CO5"].forEach(co => {
@@ -220,7 +218,7 @@
         <button onclick="resetCO('CO4')">Reset CO4</button>
         <button onclick="resetCO('CO5')">Reset CO5</button>
         <button onclick="resetAll()">Reset All</button>
-        <button onclick="saveAndProceed()">Submit</button>
+        <button onclick="saveAndProceed()">Proceed without Students List</button>
     </div>
 </body>
 </html>

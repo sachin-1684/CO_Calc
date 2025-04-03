@@ -10,11 +10,17 @@
             text-align: center;
             margin: 0;
             padding: 0;
-            background: linear-gradient(to right, #1565c0, #42a5f5);
+            background: linear-gradient(to right, red, red);
             color: white;
         }
         h1 {
             font-size: 36px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        h3 {
+            font-size: 25px;
+            color: rgb(50, 50, 200);
             font-weight: bold;
             margin-top: 20px;
         }
@@ -41,13 +47,13 @@
             font-size: 16px;
         }
         th {
-            background-color: #1565c0;
+            background-color: #c01520;
             color: white;
         }
         button {
             margin-top: 15px;
             padding: 12px 20px;
-            background-color: #1565c0;
+            background-color: #c01520;
             color: white;
             border: none;
             border-radius: 6px;
@@ -65,11 +71,26 @@
         .reset-btn:hover {
             background-color: #b71c1c;
         }
+        #coWeightage p {
+            
+            font-size: 18px;
+            font-weight: bold;
+        }
+        @media (max-width: 600px) {
+            th, td {
+                font-size: 14px;
+                padding: 8px;
+            }
+            .container {
+                width: 95%;
+                padding: 15px;
+            }
+        }
     </style>
     <script>
         let selectedCOs = JSON.parse(localStorage.getItem("selectedCOs")) || {};
         let questionMarks = JSON.parse(localStorage.getItem("questionMarks")) || {};
-        let coWeights = JSON.parse(localStorage.getItem("coWeights")) || { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
+        let coWeights = JSON.parse(localStorage.getItem("coWeights")) || { CO1: 0,     CO2: 0,    CO3: 0,     CO4: 0,     CO5: 0 };
 
         function toggleSelection(question, co, checkbox) {
             let marks = document.querySelector(`tr[data-question='${question}'] select`).value;
@@ -96,9 +117,7 @@
 
         function disableOtherCOs(question, selectedCo) {
             document.querySelectorAll(`input[data-question='${question}']`).forEach(checkbox => {
-                if (checkbox.getAttribute('data-co') !== selectedCo) {
-                    checkbox.disabled = checkbox.checked ? false : true;
-                }
+                checkbox.disabled = checkbox.getAttribute('data-co') !== selectedCo && checkbox.checked ? false : !!selectedCOs[question];
             });
         }
 
@@ -121,16 +140,24 @@
         function updateCOWeights() {
             let display = document.getElementById("coWeightage");
             display.innerHTML = "<h3>Total CO Weightage</h3><p>" +
-                Object.keys(coWeights).map(co => `${co}: ${coWeights[co]} marks`).join(' | ') + "</p>";
+                Object.keys(coWeights).map(co => `<b>${co}:</b> <span style="color: red;">${coWeights[co]} marks</span>`).join(' || ') + "</p>";
+
         }
 
-        function resetColumn(co) {
-            document.querySelectorAll(`input[data-co='${co}']`).forEach(checkbox => {
-                checkbox.checked = false;
-                checkbox.disabled = false;
+        function resetCO(co) {
+            document.querySelectorAll(`input[data-co='${co}']`).forEach(checkbox => checkbox.checked = false);
+            Object.keys(selectedCOs).forEach(q => {
+                if (selectedCOs[q] === co) delete selectedCOs[q];
             });
             coWeights[co] = 0;
             saveSelections();
+            document.querySelectorAll(`input[data-co='${co}']`).forEach(checkbox => checkbox.disabled = false);
+            updateCOWeights();
+        }
+
+        function resetAll() {
+            localStorage.clear();
+            location.reload();
         }
 
         function saveAndProceed() {
@@ -139,33 +166,49 @@
                 return;
             }
             saveSelections();
-            window.location.href = "page2.html";
+            window.location.href = "MST_CO_Calc_WL2.html";
+        }
+        function mainPage() {
+            
+            window.location.href = "index.html";
+        }
+
+        function restoreSelections() {
+            Object.keys(selectedCOs).forEach(question => {
+                let co = selectedCOs[question];
+                let checkbox = document.querySelector(`input[data-question='${question}'][data-co='${co}']`);
+                if (checkbox) checkbox.checked = true;
+            });
+            Object.keys(questionMarks).forEach(question => {
+                let select = document.querySelector(`tr[data-question='${question}'] select`);
+                if (select) select.value = questionMarks[question];
+            });
         }
 
         window.onload = function () {
+            restoreSelections();
             updateCOWeights();
         };
     </script>
 </head>
 <body>
     <h1>Welcome to Chandigarh University Exams</h1>
+    <button onclick="mainPage()">Main Dashboard</button>
     <div class="container">
         <table>
             <tr>
                 <th>Questions</th>
                 <th>Marks</th>
-                <th>CO1 <button class="reset-btn" onclick="resetColumn('CO1')">Reset</button></th>
-                <th>CO2 <button class="reset-btn" onclick="resetColumn('CO2')">Reset</button></th>
-                <th>CO3 <button class="reset-btn" onclick="resetColumn('CO3')">Reset</button></th>
-                <th>CO4 <button class="reset-btn" onclick="resetColumn('CO4')">Reset</button></th>
-                <th>CO5 <button class="reset-btn" onclick="resetColumn('CO5')">Reset</button></th>
+                <th>CO1</th>
+                <th>CO2</th>
+                <th>CO3</th>
+                <th>CO4</th>
+                <th>CO5</th>
             </tr>
             <script>
                 const questions = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"];
                 questions.forEach(q => {
-                    document.write(`<tr data-question="${q}">
-                        <td>${q}</td>
-                        <td><select onchange="saveSelections()">${Array.from({ length: 11 }, (_, i) => `<option value="${i}">${i}</option>`).join('')}</select></td>`);
+                    document.write(`<tr data-question="${q}"><td>${q}</td><td><select onchange="saveSelections()">${Array.from({ length: 11 }, (_, i) => `<option value="${i}">${i}</option>`).join('')}</select></td>`);
                     ["CO1", "CO2", "CO3", "CO4", "CO5"].forEach(co => {
                         document.write(`<td><input type='checkbox' data-question='${q}' data-co='${co}' onchange="toggleSelection('${q}', '${co}', this)"></td>`);
                     });
@@ -176,8 +219,13 @@
         <br>
         <div id="coWeightage"></div>
         <br>
-        <button onclick="saveAndProceed()">Submit</button>
+        <button onclick="resetCO('CO1')">Reset CO1</button>
+        <button onclick="resetCO('CO2')">Reset CO2</button>
+        <button onclick="resetCO('CO3')">Reset CO3</button>
+        <button onclick="resetCO('CO4')">Reset CO4</button>
+        <button onclick="resetCO('CO5')">Reset CO5</button>
+        <button onclick="resetAll()">Reset All</button>
+        <button onclick="saveAndProceed()">Proceed With Students List </button>
     </div>
 </body>
 </html>
-tr

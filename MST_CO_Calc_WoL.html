@@ -10,7 +10,7 @@
             text-align: center;
             margin: 0;
             padding: 0;
-            background: linear-gradient(to right, red,white);
+            background: linear-gradient(to right, red, red);
             color: white;
         }
         h1 {
@@ -88,7 +88,6 @@
         }
     </style>
     <script>
-           
         let selectedCOs = JSON.parse(localStorage.getItem("selectedCOs")) || {};
         let questionMarks = JSON.parse(localStorage.getItem("questionMarks")) || {};
         let coWeights = JSON.parse(localStorage.getItem("coWeights")) || { CO1: 0,     CO2: 0,    CO3: 0,     CO4: 0,     CO5: 0 };
@@ -115,7 +114,13 @@
             disableOtherCOs(question, co);
             saveSelections();
         }
-       
+
+        function disableOtherCOs(question, selectedCo) {
+            document.querySelectorAll(`input[data-question='${question}']`).forEach(checkbox => {
+                checkbox.disabled = checkbox.getAttribute('data-co') !== selectedCo && checkbox.checked ? false : !!selectedCOs[question];
+            });
+        }
+
         function saveSelections() {
             document.querySelectorAll("tr[data-question]").forEach(row => {
                 let qId = row.getAttribute("data-question");
@@ -161,7 +166,11 @@
                 return;
             }
             saveSelections();
-            window.location.href = "Dropdown_menu2.html";
+            window.location.href = "CO_Calc.html";
+        }
+        function mainPage() {
+            
+            window.location.href = "index.html";
         }
 
         function restoreSelections() {
@@ -184,6 +193,7 @@
 </head>
 <body>
     <h1>Welcome to Chandigarh University Exams</h1>
+    <button onclick="mainPage()">Main Dashboard</button>
     <div class="container">
         <table>
             <tr>
@@ -215,8 +225,7 @@
         <button onclick="resetCO('CO4')">Reset CO4</button>
         <button onclick="resetCO('CO5')">Reset CO5</button>
         <button onclick="resetAll()">Reset All</button>
-        <button onclick="saveAndProceed()">Submit</button>
+        <button onclick="saveAndProceed()">Proceed Without Student List</button>
     </div>
-    <
 </body>
 </html>

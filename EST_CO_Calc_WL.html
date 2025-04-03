@@ -159,9 +159,12 @@
                 return;
             }
             saveSelections();
-            window.location.href = "page3.html";
+            window.location.href = "EST_CO_Calc_WL2.html";
         }
-
+        function mainPage() {
+            
+            window.location.href = "index.html";
+        }
         function restoreSelections() {
             Object.keys(selectedCOs).forEach(question => {
                 let co = selectedCOs[question];
@@ -182,6 +185,7 @@
 </head>
 <body>
     <h1>Welcome to Chandigarh University Exams</h1>
+    <button onclick="mainPage()">Main Dashboard</button>
     <div class="container">
         <table>
             <tr>
@@ -213,7 +217,7 @@
         <button onclick="resetCO('CO4')">Reset CO4</button>
         <button onclick="resetCO('CO5')">Reset CO5</button>
         <button onclick="resetAll()">Reset All</button>
-        <button onclick="saveAndProceed()">Submit</button>
+        <button onclick="saveAndProceed()">Proceed With Student List</button>
     </div>
 </body>
 </html>
