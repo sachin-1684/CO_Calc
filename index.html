@@ -8,70 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
 
-.logo-container {
-            display: flex;
-            justify-content: center;
-            margin: 30px;
-        }
-        .logo {
-            width: 250px;
-            height: 250px;
-            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
-            border-radius: 25px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-        .logo::before {
-            content: "";
-            position: absolute;
-            width: 150%;
-            height: 40%;
-            background: rgba(255, 255, 255, 0.1);
-            transform: rotate(15deg);
-            top: -20%;
-        }
-        
-        .logo-inner {
-            background: white;
-            width: 80%;
-            height: 80%;
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-            text-align: center;
-        }
-        
-        .logo-acronym {
-            font-family: 'Arial', sans-serif;
-            font-weight: bold;
-            font-size: 48px;
-            color: #d32f2f;
-            margin-bottom: 5px;
-        }
-        
-        .logo-name {
-            font-family: 'Arial', sans-serif;
-            font-weight: bold;
-            font-size: 20px;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .logo-university {
-            font-family: 'Arial', sans-serif;
-            font-size: 12px;
-            color: #666;
-            letter-spacing: 1px;
-        }
+
         
         :root {
             --primary: #d32f2f;
@@ -98,7 +35,7 @@
         }
         
         .header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            background: linear-gradient(135deg, var(--primary) 50%, var(--primary-dark) 50%);
             padding: 2rem 1rem;
             color: var(--white);
             text-align: center;
@@ -114,21 +51,34 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path fill="rgba(255,255,255,0.05)" d="M0,0 L100,0 L100,100 L0,100 Z" /></svg>');
+            /* background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path fill="rgba(255,255,255,0.05)" d="M0,0 L100,0 L100,100 L0,100 Z" /></svg>'); */
             background-size: cover;
             opacity: 0.1;
         }
-        
-        .header img {
-            width: 200px;
-            margin-bottom: 1rem;
+        .header-content {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            position: relative;
+        }
+
+        .header-logo-center {
+            width: 150px;
+            margin-left: rem;
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+        .header-logo-left {
+            width: 200px;
+            margin-left: 28rem;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+            position: absolute;
+           
         }
         
         .header h1 {
             font-size: 2.2rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
+            font-weight: 500;
+            margin-top: rem;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
         
@@ -143,7 +93,7 @@
         }
         
         .card {
-            background: var(--white);
+            background: var(--black);
             border-radius: 16px;
             box-shadow: var(--shadow);
             text-align: center;
@@ -264,9 +214,14 @@
 <body>
     
     <div class="header">
-        <img src="Logo.png" alt="Chandigarh University Logo">
-        <h1>Welcome to Chandigarh University Examination</h1>
+        <div class="header-content"></div>
+        <img class="header-logo-center" src="Logo2.png" alt="Chandigarh University Logo" >
+        <img class="header-logo-left" src="Logo.png" alt="CO-Master Logo" >
+        <h1>Welcome to Chandigarh University Examination</h1> <h1>CO-MASTER</h1>
     </div>
+    </div>
+        
+       
     
     <div class="container">
         <div class="card">
@@ -281,7 +236,7 @@
                         <i class="fas fa-calculator"></i> Use CO Calculator Only
                     </a>
                     <a href="EST_CO_Calc_WL.html" class="btn btn-secondary">
-                        <i class="fas fa-users"></i> Calculate with Student List
+                        <i class="fas fa-users"></i> <b>Calculate with Student List</b>
                     </a>
                 </div>
             </div>
@@ -299,7 +254,7 @@
                         <i class="fas fa-calculator"></i> Use CO Calculator Only
                     </a>
                     <a href="MST_CO_Calc_WL.html" class="btn btn-secondary">
-                        <i class="fas fa-users"></i> Calculate with Student List
+                        <i class="fas fa-users"></i> <b>Calculate with Student List</b>
                     </a>
                 </div>
             </div>
