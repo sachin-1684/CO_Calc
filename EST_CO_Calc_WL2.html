@@ -177,7 +177,7 @@
             display: flex;
             justify-content: flex-end;
         }
-        select, input[type="number"] {
+        select, input[type="number"], input[type="text"] {
             width: 100%;
             padding: 8px;
             margin: 5px 0;
@@ -192,7 +192,85 @@
             font-size: clamp(12px, 2vw, 14px);
             margin: 5px 0;
         }
-
+        .progress-summary {
+            background: #f1f1f1;
+            padding: 8px;
+            margin: 10px 0;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .progress-details {
+            display: flex;
+            justify-content: space-around;
+            gap: 5px;
+        }
+        .progress-section {
+            flex: 1;
+        }
+        .progress-section h4 {
+            margin: 5px 0;
+            color: #c01520;
+            font-size: 14px;
+        }
+        .pending-students {
+            max-height: 80px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 5px;
+            border-radius: 4px;
+            background: white;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+        .pending-student {
+            padding: 2px;
+            border-bottom: 1px solid #eee;
+        }
+        .status-section {
+            margin: 10px 0;
+        }
+        .status-A {
+            color: green;
+            font-weight: bold;
+        }
+        .status-I {
+            color: orange;
+            font-weight: bold;
+        }
+        .status-P {
+            color: blue;
+            font-weight: bold;
+        }
+        .marks-upload-section {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        .download-section {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px dashed #c01520;
+        }
+        .duplicate-warning {
+            color: #ff5722;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .file-type-selector {
+            margin-bottom: 10px;
+        }
+        .file-type-selector label {
+            margin-right: 15px;
+            cursor: pointer;
+        }
+        .file-type-selector input {
+            margin-right: 5px;
+        }
         @media (min-width: 768px) {
             .student-management {
                 flex-direction: row;
@@ -220,8 +298,13 @@
                 padding: 8px 12px;
                 min-width: 100px;
             }
+            .progress-details {
+                flex-direction: column;
+            }
         }
     </style>
+    <!-- SheetJS library for Excel handling -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> 
 </head>
 <body>
     <h1>CO Marks Allocation</h1>
@@ -230,11 +313,16 @@
         <div class="student-management">
             <div class="upload-section">
                 <h2>Upload Student List</h2>
+                <div class="file-type-selector">
+                    <label><input type="radio" name="studentFileType" value="csv" checked> CSV</label>
+                    <label><input type="radio" name="studentFileType" value="excel"> Excel</label>
+                </div>
                 <div class="file-input-container">
-                    <input type="file" id="studentFile" accept=".csv">
+                    <input type="file" id="studentFile" accept=".csv,.xlsx,.xls">
                     <button onclick="uploadStudentList()">Upload</button>
                 </div>
                 <div id="uploadStatus"></div>
+                <div id="duplicateWarning" class="duplicate-warning" style="display: none;"></div>
                 <div id="studentListContainer" class="student-list" style="display: none;">
                     <h3>Uploaded Students</h3>
                     <button onclick="deleteStudentList()" class="delete-btn" style="margin-bottom: 8px;">Delete List</button>
@@ -245,13 +333,42 @@
             <div class="selection-section">
                 <h2>Select Student</h2>
                 <select id="studentSelect"></select>
-                <button onclick="submitStudentData()">Submit Marks</button>
+                
+                <div class="status-section">
+                    <label for="studentStatus">Status:</label>
+                    <select id="studentStatus" onchange="handleStatusChange()">
+                        <option value="P" selected>P (Present)</option>
+                        <option value="A">A (Absent)</option>
+                        <option value="I">I (Detained)</option>
+                    </select>
+                </div>
+                
                 <div id="currentStudent"></div>
+                <button onclick="submitStudentData()">Submit</button>
+            </div>
+        </div>
+        
+        <!-- Progress Summary Section -->
+        <div class="progress-summary" id="progressSummary" style="display: none;">
+            <h4>Marks Submission Progress</h4>
+            <div class="progress-details">
+                <div class="progress-section">
+                    <h4>Total: <span id="totalStudentsCount">0</span></h4>
+                </div>
+                <div class="progress-section">
+                    <h4>Submitted: <span id="submittedStudentsCount">0</span></h4>
+                </div>
+                <div class="progress-section">
+                    <h4>Pending: <span id="pendingStudentsCount">0</span></h4>
+                </div>
+            </div>
+            <div class="pending-students" id="pendingStudentsList">
+                No pending students
             </div>
         </div>
         
         <div style="overflow-x: auto;">
-            <table>
+            <table id="questionsTable">
                 <thead>
                     <tr>
                         <th>Question</th>
@@ -263,7 +380,7 @@
                 <tbody id="coTableBody"></tbody>
             </table>
         </div>
-
+        <button onclick="submitStudentData()">Add Marks</button>
         <div class="summary-box">
             <p>Total Questions Marks: <span id="totalMarksDisplay" class="red-bold">0/0</span></p>
         </div>
@@ -276,12 +393,28 @@
             <p>Total CO Marks Assigned: <span id="totalCOMarks" class="red-bold">0</span></p>
         </div>
         
-        <div class="action-buttons">
-            <button onclick="downloadStudentCOData()">Download All CO Data (CSV)</button>
-            <button onclick="homePage()">Home Page</button>
-            <button onclick="resetPage()" style="background-color: #ff4444;">Reset Page</button>
+        <div class="marks-upload-section">
+            <h3>Upload Marks</h3>
+            <div class="file-type-selector">
+                <label><input type="radio" name="marksFileType" value="csv" checked> CSV</label>
+                <label><input type="radio" name="marksFileType" value="excel"> Excel</label>
+            </div>
+            <div class="file-input-container">
+                <input type="file" id="marksFile" accept=".csv,.xlsx,.xls">
+                <button onclick="uploadMarksFromFile()">Upload Marks</button>
+                <button onclick="removeMarksFile()" class="delete-btn" style="display:none;" id="removeMarksBtn">Remove File</button>
+            </div>
+            <div id="marksUploadStatus"></div>
+            <div class="download-section" id="downloadUpdatedFile" style="display: none;">
+                <h4>Download Updated File</h4>
+                <div class="file-type-selector">
+                    <label><input type="radio" name="downloadFileType" value="csv" checked> CSV</label>
+                    <label><input type="radio" name="downloadFileType" value="excel"> Excel</label>
+                </div>
+                <button onclick="downloadUpdatedFile()" style="background-color: #4CAF50;">Download Updated File</button>
+            </div>
         </div>
-        
+
         <div id="submittedStudents" style="margin-top: 15px; text-align: left;">
             <h3>Submitted Students:</h3>
             <div class="bulk-actions">
@@ -290,6 +423,12 @@
             <div style="overflow-x: auto;">
                 <div id="submittedList"></div>
             </div>
+        </div>
+
+        <div class="action-buttons">
+            <button onclick="downloadStudentCOData()">Download All CO Data (CSV)</button>
+            <button onclick="homePage()">Home Page</button>
+            <button onclick="resetPage()" style="background-color: #ff4444;">Reset Page</button>
         </div>
     </div>
 
@@ -305,20 +444,55 @@
         let editMode = false;
         let currentEditIndex = -1;
         let selectedStudents = new Set();
+        let currentStatus = "P";
+        let currentFileData = null;
+        let currentFileType = null;
 
         // Initialize the page
         window.onload = function() {
+            // First load the question data
+            loadQuestionData();
+            
+            // Then load the rest of the data
             loadData();
             populateTable();
             updateSubmittedList();
+            updateProgressSummary();
+            
+            // Ensure table is visible
+            document.getElementById("questionsTable").style.display = "table";
         };
+
+        // New function to specifically load question data
+        function loadQuestionData() {
+            let storedMarks = localStorage.getItem("questionMarks");
+            if (storedMarks) {
+                questionMarks = JSON.parse(storedMarks);
+                // If no question marks found, initialize with default values
+                if (Object.keys(questionMarks).length === 0) {
+                    initializeDefaultQuestions();
+                }
+            } else {
+                initializeDefaultQuestions();
+            }
+        }
+
+        // Initialize default questions if none exist
+        function initializeDefaultQuestions() {
+            questionMarks = {
+                "Q1": 0,
+                "Q2": 0,
+                "Q3": 0,
+                "Q4": 0,
+                "Q5": 0,
+                "Q6": 0,
+                "Q7": 0
+            };
+            localStorage.setItem("questionMarks", JSON.stringify(questionMarks));
+        }
 
         // Load data from localStorage
         function loadData() {
-            // Load question data
-            let storedMarks = localStorage.getItem("questionMarks");
-            if (storedMarks) questionMarks = JSON.parse(storedMarks);
-
             let storedCOs = localStorage.getItem("selectedCOs");
             if (storedCOs) {
                 selectedCOs = JSON.parse(storedCOs);
@@ -340,42 +514,312 @@
             populateStudentDropdown();
         }
 
-        // Upload student list from CSV
-        function uploadStudentList() {
+        // Handle status change
+        function handleStatusChange() {
+            currentStatus = document.getElementById("studentStatus").value;
+            updateInputFields();
+            updateCOMarks();
+        }
+
+        // Update input fields based on status
+        function updateInputFields() {
+            Object.keys(questionMarks).forEach(q => {
+                let input = document.getElementById(`${q}_marks`);
+                if (currentStatus === "A") {
+                    input.type = "text";
+                    input.value = "A";
+                    input.readOnly = true;
+                } else if (currentStatus === "I") {
+                    input.type = "text";
+                    input.value = "I";
+                    input.readOnly = true;
+                } else {
+                    input.type = "number";
+                    input.readOnly = false;
+                    input.min = "0";
+                    input.max = questionMarks[q];
+                    input.value = "";
+                }
+            });
+        }
+
+        // Process Excel file
+        async function processExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        resolve(jsonData);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Process CSV file
+        function processCSVFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const content = e.target.result;
+                        const lines = content.split('\n').filter(line => line.trim() !== '');
+                        const csvData = lines.map(line => line.split(','));
+                        resolve(csvData);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = reject;
+                reader.readAsText(file);
+            });
+        }
+
+        // Upload marks from file (CSV or Excel)
+        async function uploadMarksFromFile() {
+            let fileInput = document.getElementById("marksFile");
+            let file = fileInput.files[0];
+
+            if (!file) {
+                document.getElementById("marksUploadStatus").innerHTML = 
+                    `<span style="color: red;">Please select a file!</span>`;
+                return;
+            }
+
+            const fileType = document.querySelector('input[name="marksFileType"]:checked').value;
+            
+            try {
+                let data;
+                if (fileType === 'excel') {
+                    data = await processExcelFile(file);
+                } else {
+                    data = await processCSVFile(file);
+                }
+                
+                currentFileData = data;
+                currentFileType = fileType;
+                document.getElementById("removeMarksBtn").style.display = "inline-block";
+                document.getElementById("downloadUpdatedFile").style.display = "block";
+                document.getElementById("marksUploadStatus").innerHTML = 
+                    `<span style="color: green;">File "${file.name}" uploaded successfully!</span>`;
+            } catch (error) {
+                console.error("Error processing file:", error);
+                document.getElementById("marksUploadStatus").innerHTML = 
+                    `<span style="color: red;">Error processing file: ${error.message}</span>`;
+            }
+        }
+
+        // Remove uploaded marks file
+        function removeMarksFile() {
+            document.getElementById("marksFile").value = "";
+            document.getElementById("removeMarksBtn").style.display = "none";
+            document.getElementById("downloadUpdatedFile").style.display = "none";
+            document.getElementById("marksUploadStatus").innerHTML = "";
+            currentFileData = null;
+            currentFileType = null;
+        }
+
+        // Convert data to CSV format
+        function convertToCSV(data) {
+            return data.map(row => row.join(',')).join('\n');
+        }
+
+        // Download updated file (CSV or Excel)
+        // Download updated file (CSV or Excel) - FIXED VERSION
+        function downloadUpdatedFile() {
+    if (!currentFileData) {
+        alert("No file data available to process!");
+        return;
+    }
+
+    const fileType = document.querySelector('input[name="downloadFileType"]:checked').value;
+    let updatedData = processFileData(currentFileData);
+    
+    if (updatedData.length === 0) return;
+    
+    if (fileType === 'excel') {
+        try {
+            // Convert to worksheet
+            let ws;
+            if (Array.isArray(updatedData[0])) {
+                // Array of arrays
+                ws = XLSX.utils.aoa_to_sheet(updatedData);
+            } else {
+                // Array of objects
+                ws = XLSX.utils.json_to_sheet(updatedData);
+            }
+            
+            // Create workbook and add worksheet
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "MarksData");
+            
+            // Generate and download Excel file
+            XLSX.writeFile(wb, "updated_marks.xlsx");
+        } catch (error) {
+            console.error("Error generating Excel file:", error);
+            alert("Error generating Excel file: " + error.message);
+        }
+    } else {
+        // Download CSV
+        let csvContent;
+        if (Array.isArray(updatedData[0])) {
+            // Array of arrays
+            csvContent = updatedData.map(row => row.join(',')).join('\n');
+        } else {
+            // Array of objects
+            const headers = Object.keys(updatedData[0]);
+            csvContent = [
+                headers.join(','),
+                ...updatedData.map(row => headers.map(h => row[h]).join(','))
+            ].join('\n');
+        }
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "updated_marks.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+}
+
+
+
+        // Process file data to update marks
+        function processFileData(data) {
+    let updatedData = [];
+    
+    // First determine if we have array of arrays or array of objects
+    const isArrayOfArrays = Array.isArray(data[0]);
+    
+    // Get headers
+    let headers = isArrayOfArrays ? data[0] : Object.keys(data[0]);
+    
+    // Find index of key columns
+    const uidCol = headers.findIndex(h => h.includes("UID"));
+    const coCol = headers.findIndex(h => h.includes("CourseOu"));
+    const marksCol = headers.findIndex(h => h.includes("MarkObtd"));
+    
+    // Return empty if we don't have required columns
+    if (uidCol === -1 || coCol === -1 || marksCol === -1) {
+        alert("Required columns (UID, CourseOu, MarkObtd) not found in file!");
+        return [];
+    }
+    
+    // Process each row
+    for (let i = isArrayOfArrays ? 1 : 0; i < data.length; i++) {
+        let row = data[i];
+        
+        // Convert to array format if it's an object
+        if (!Array.isArray(row)) {
+            row = headers.map(h => row[h]);
+        }
+        
+        // Get UID and CO
+        let uid = row[uidCol] ? row[uidCol].toString().trim() : '';
+        let co = row[coCol] ? row[coCol].toString().trim() : '';
+        
+        // Find matching student and update marks
+        if (uid && co) {
+            let matchingStudent = studentData.find(s => s.UID === uid);
+            if (matchingStudent) {
+                row[marksCol] = matchingStudent[co] || 0;
+            }
+        }
+        
+        updatedData.push(row);
+    }
+    
+    // Return in same format as input
+    return isArrayOfArrays ? [headers, ...updatedData] : updatedData.map(row => {
+        let obj = {};
+        headers.forEach((h, idx) => {
+            obj[h] = row[idx];
+        });
+        return obj;
+    });
+}
+
+
+        // Upload student list from file (CSV or Excel)
+        async function uploadStudentList() {
             let fileInput = document.getElementById("studentFile");
             let file = fileInput.files[0];
 
             if (!file) {
-                alert("Please select a CSV file!");
+                alert("Please select a file!");
                 return;
             }
 
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                let content = e.target.result;
-                let lines = content.split('\n').filter(line => line.trim() !== '');
+            const fileType = document.querySelector('input[name="studentFileType"]:checked').value;
+            
+            try {
+                let data;
+                if (fileType === 'excel') {
+                    data = await processExcelFile(file);
+                } else {
+                    data = await processCSVFile(file);
+                }
                 
-                studentList = [];
-                for (let i = 0; i < lines.length; i++) {
-                    let parts = lines[i].split(',');
-                    if (parts.length >= 1) {
-                        let uid = parts[0].trim();
-                        let name = parts.length > 1 ? parts[1].trim() : uid;
-                        studentList.push({ UID: uid, name: name });
+                let tempStudentList = [];
+                let duplicateCount = 0;
+                let seenCombinations = new Set();
+                
+                // Start from index 1 to skip header row (assuming first row is header)
+                for (let i = 1; i < data.length; i++) {
+                    let row = data[i];
+                    if (row.length >= 3) { // Ensure we have at least columns A, B, and C
+                        let name = row[0] ? row[0].toString().trim() : ''; // Column A (Name)
+                        let uid = row[2] ? row[2].toString().trim() : ''; // Column C (UID)
+                        
+                        // Create a unique key combining UID and Name
+                        let combinationKey = `${uid}_${name}`;
+                        
+                        // Check if this UID-Name combination already exists
+                        if (seenCombinations.has(combinationKey)) {
+                            duplicateCount++;
+                            continue;
+                        }
+                        
+                        seenCombinations.add(combinationKey);
+                        tempStudentList.push({ UID: uid, name: name });
                     }
                 }
 
+                studentList = tempStudentList;
                 localStorage.setItem("studentList", JSON.stringify(studentList));
-                document.getElementById("uploadStatus").innerHTML = 
+                
+                let uploadStatus = document.getElementById("uploadStatus");
+                uploadStatus.innerHTML = 
                     `<span style="color: green;">Successfully uploaded ${studentList.length} students!</span>`;
+                
+                if (duplicateCount > 0) {
+                    document.getElementById("duplicateWarning").style.display = "block";
+                    document.getElementById("duplicateWarning").textContent = 
+                        `Note: ${duplicateCount} duplicate entries (same UID and Name) were removed from the list.`;
+                } else {
+                    document.getElementById("duplicateWarning").style.display = "none";
+                }
+                
                 showStudentList();
                 populateStudentDropdown();
-            };
-            reader.onerror = function() {
+                updateProgressSummary();
+            } catch (error) {
+                console.error("Error processing student list:", error);
                 document.getElementById("uploadStatus").innerHTML = 
-                    `<span style="color: red;">Error reading file!</span>`;
-            };
-            reader.readAsText(file);
+                    `<span style="color: red;">Error processing file: ${error.message}</span>`;
+            }
         }
 
         // Delete uploaded student list
@@ -388,6 +832,8 @@
                 document.getElementById("studentListContainer").style.display = "none";
                 document.getElementById("uploadStatus").innerHTML = 
                     `<span style="color: red;">Student list deleted!</span>`;
+                document.getElementById("duplicateWarning").style.display = "none";
+                updateProgressSummary();
             }
         }
 
@@ -440,21 +886,47 @@
             tableBody.innerHTML = "";
             totalQMarks = 0;
 
+            // Ensure we have questions to display
+            if (Object.keys(questionMarks).length === 0) {
+                initializeDefaultQuestions();
+            }
+
             Object.keys(questionMarks).forEach(q => {
                 let maxMarks = questionMarks[q] || 0;
                 totalQMarks += maxMarks;
                 let co = selectedCOs[q] || "Not Assigned";
 
                 let row = document.createElement("tr");
+                let input = document.createElement("input");
+                input.id = `${q}_marks`;
+                input.oninput = function() { updateCOMarks(); };
+                
+                if (currentStatus === "A") {
+                    input.type = "text";
+                    input.value = "A";
+                    input.readOnly = true;
+                } else if (currentStatus === "I") {
+                    input.type = "text";
+                    input.value = "I";
+                    input.readOnly = true;
+                } else {
+                    input.type = "number";
+                    input.min = "0";
+                    input.max = maxMarks;
+                }
+
                 row.innerHTML = `
                     <td>${q}</td>
                     <td>${maxMarks}</td>
                     <td>${co}</td>
-                    <td><input type="number" min="0" max="${maxMarks}" id="${q}_marks" oninput="updateCOMarks()"></td>
+                    <td></td>
                 `;
+                row.cells[3].appendChild(input);
                 tableBody.appendChild(row);
             });
 
+            // Make sure table is visible
+            document.getElementById("questionsTable").style.display = "table";
             updateCODisplay();
             updateTotalMarksDisplay();
         }
@@ -464,8 +936,18 @@
             let coMarksContainer = document.getElementById("coMarksContainer");
             coMarksContainer.innerHTML = "";
             
-            // Sort COs for consistent display
-            let sortedCOs = Array.from(activeCOs).sort();
+            // Sort COs for consistent display (Q1-Q7 first, then A/I)
+            let sortedCOs = Array.from(activeCOs).sort((a, b) => {
+                if (a.startsWith('Q') && b.startsWith('Q')) {
+                    return parseInt(a.substring(1)) - parseInt(b.substring(1));
+                } else if (a.startsWith('Q')) {
+                    return -1;
+                } else if (b.startsWith('Q')) {
+                    return 1;
+                } else {
+                    return a.localeCompare(b);
+                }
+            });
             
             sortedCOs.forEach(co => {
                 let p = document.createElement("p");
@@ -484,34 +966,73 @@
                 coMarks[co] = 0;
             });
 
-            Object.keys(questionMarks).forEach(q => {
-                let marks = Number(document.getElementById(`${q}_marks`).value) || 0;
-                let maxMarks = questionMarks[q];
-                let assignedCO = selectedCOs[q];
+            if (currentStatus === "A") {
+                // Absent - all marks are "A"
+                Object.keys(questionMarks).forEach(q => {
+                    let assignedCO = selectedCOs[q];
+                    if (assignedCO && assignedCO !== "Not Assigned" && activeCOs.has(assignedCO)) {
+                        coMarks[assignedCO] = "A";
+                    }
+                });
+                
+                // Update display to show "A" for all COs
+                activeCOs.forEach(co => {
+                    document.getElementById(`${co.toLowerCase()}Marks`).innerText = "A";
+                });
+                
+                document.getElementById("totalCOMarks").innerText = "A";
+                document.getElementById("totalMarksDisplay").innerText = `A/${totalQMarks}`;
+                return;
+            }
+            else if (currentStatus === "I") {
+                // Detained - all marks are "I"
+                Object.keys(questionMarks).forEach(q => {
+                    let assignedCO = selectedCOs[q];
+                    if (assignedCO && assignedCO !== "Not Assigned" && activeCOs.has(assignedCO)) {
+                        coMarks[assignedCO] = "I";
+                    }
+                });
+                
+                // Update display to show "I" for all COs
+                activeCOs.forEach(co => {
+                    document.getElementById(`${co.toLowerCase()}Marks`).innerText = "I";
+                });
+                
+                document.getElementById("totalCOMarks").innerText = "I";
+                document.getElementById("totalMarksDisplay").innerText = `I/${totalQMarks}`;
+                return;
+            }
+            else {
+                // Present - calculate marks based on inputs
+                Object.keys(questionMarks).forEach(q => {
+                    let marks = Number(document.getElementById(`${q}_marks`).value) || 0;
+                    let maxMarks = questionMarks[q];
+                    let assignedCO = selectedCOs[q];
 
-                // Validate marks don't exceed maximum
-                if (marks > maxMarks) {
-                    alert(`Marks for ${q} cannot exceed ${maxMarks}`);
-                    document.getElementById(`${q}_marks`).value = maxMarks;
-                    marks = maxMarks;
-                }
+                    // Validate marks don't exceed maximum
+                    if (marks > maxMarks) {
+                        alert(`Marks for ${q} cannot exceed ${maxMarks}`);
+                        document.getElementById(`${q}_marks`).value = maxMarks;
+                        marks = maxMarks;
+                    }
 
-                totalObtainedMarks += marks;
+                    totalObtainedMarks += marks;
 
-                // Only add to CO marks if CO is assigned and active
-                if (assignedCO && assignedCO !== "Not Assigned" && activeCOs.has(assignedCO)) {
-                    coMarks[assignedCO] += marks;
-                }
-            });
+                    // Only add to CO marks if CO is assigned and active
+                    if (assignedCO && assignedCO !== "Not Assigned" && activeCOs.has(assignedCO)) {
+                        coMarks[assignedCO] += marks;
+                    }
+                });
 
-            // Update CO marks display
-            activeCOs.forEach(co => {
-                document.getElementById(`${co.toLowerCase()}Marks`).innerText = coMarks[co];
-            });
-            
-            // Update totals
-            document.getElementById("totalCOMarks").innerText = Object.values(coMarks).reduce((a, b) => a + b, 0);
-            document.getElementById("totalMarksDisplay").innerText = `${totalObtainedMarks}/${totalQMarks}`;
+                // Update CO marks display
+                activeCOs.forEach(co => {
+                    document.getElementById(`${co.toLowerCase()}Marks`).innerText = coMarks[co];
+                });
+                
+                // Update totals
+                document.getElementById("totalCOMarks").innerText = Object.values(coMarks).reduce((a, b) => a + b, 0);
+                document.getElementById("totalMarksDisplay").innerText = `${totalObtainedMarks}/${totalQMarks}`;
+            }
         }
 
         // Update the total marks display
@@ -539,18 +1060,8 @@
                 return;
             }
 
-            // Check if marks are entered
-            let hasMarks = false;
-            Object.keys(questionMarks).forEach(q => {
-                if (document.getElementById(`${q}_marks`).value) {
-                    hasMarks = true;
-                }
-            });
-            
-            if (!hasMarks) {
-                alert("Please enter marks for at least one question!");
-                return;
-            }
+            // Get current status
+            let status = document.getElementById("studentStatus").value;
 
             // Store original marks for each question
             let questionMarksData = {};
@@ -565,22 +1076,44 @@
                 coMarks[co] = 0;
             });
 
-            Object.keys(questionMarks).forEach(q => {
-                let marks = Number(document.getElementById(`${q}_marks`).value) || 0;
-                totalObtainedMarks += marks;
-                
-                let assignedCO = selectedCOs[q];
-                if (assignedCO && assignedCO !== "Not Assigned" && activeCOs.has(assignedCO)) {
-                    coMarks[assignedCO] += marks;
-                }
-            });
+            if (status === "A") {
+                // Absent - all marks are "A"
+                Object.keys(questionMarks).forEach(q => {
+                    let assignedCO = selectedCOs[q];
+                    if (assignedCO && assignedCO !== "Not Assigned" && activeCOs.has(assignedCO)) {
+                        coMarks[assignedCO] = "A";
+                    }
+                });
+            } 
+            else if (status === "I") {
+                // Detained - all marks are "I"
+                Object.keys(questionMarks).forEach(q => {
+                    let assignedCO = selectedCOs[q];
+                    if (assignedCO && assignedCO !== "Not Assigned" && activeCOs.has(assignedCO)) {
+                        coMarks[assignedCO] = "I";
+                    }
+                });
+            }
+            else {
+                // Present - calculate marks based on inputs
+                Object.keys(questionMarks).forEach(q => {
+                    let marks = Number(document.getElementById(`${q}_marks`).value) || 0;
+                    totalObtainedMarks += marks;
+                    
+                    let assignedCO = selectedCOs[q];
+                    if (assignedCO && assignedCO !== "Not Assigned" && activeCOs.has(assignedCO)) {
+                        coMarks[assignedCO] += marks;
+                    }
+                });
+            }
 
             // Prepare student record
             let studentRecord = {
                 UID: selectedUID,
                 Name: student.name,
+                Status: status,
                 ...coMarks,
-                "Total Marks": totalObtainedMarks,
+                "Total Marks": status === "A" ? "A" : (status === "I" ? "I" : totalObtainedMarks),
                 "QuestionMarks": questionMarksData, // Store individual question marks
                 Timestamp: new Date().toLocaleString()
             };
@@ -591,17 +1124,19 @@
                 editMode = false;
                 currentEditIndex = -1;
                 document.getElementById("studentSelect").disabled = false;
+                document.getElementById("studentStatus").disabled = false;
                 document.getElementById("currentStudent").innerHTML = "";
             } else {
                 // Add new record
                 studentData.push(studentRecord);
             }
 
-            localStorage.setItem("studentData", JSON.stringify(studentData));
+            localStorage.setItem("studentData", JSON.stringify(studentRecord));
             document.getElementById("currentStudent").innerHTML = 
-                `<span style="color: green;">Current: ${student.name} (${student.UID})</span>`;
+                `<span style="color: green;">Current: ${student.name} (${student.UID}) - Status: ${status}</span>`;
             
             updateSubmittedList();
+            updateProgressSummary();
             clearMarks();
             alert(`Marks ${editMode ? 'updated' : 'submitted'} for ${student.name} (${student.UID})`);
         }
@@ -612,6 +1147,10 @@
             document.getElementById("studentSelect").value = student.UID;
             document.getElementById("studentSelect").disabled = true;
             
+            // Set the status
+            document.getElementById("studentStatus").value = student.Status || "P";
+            currentStatus = student.Status || "P";
+            
             // Clear all marks first
             clearMarks();
             
@@ -620,7 +1159,15 @@
                 Object.keys(student.QuestionMarks).forEach(q => {
                     let input = document.getElementById(`${q}_marks`);
                     if (input) {
-                        input.value = student.QuestionMarks[q];
+                        if (student.Status === "A") {
+                            input.value = "A";
+                            input.readOnly = true;
+                        } else if (student.Status === "I") {
+                            input.value = "I";
+                            input.readOnly = true;
+                        } else {
+                            input.value = student.QuestionMarks[q];
+                        }
                     }
                 });
             }
@@ -631,7 +1178,7 @@
             
             // Update display to show we're in edit mode
             document.getElementById("currentStudent").innerHTML = 
-                `<span style="color: blue;">Editing: ${student.Name} (${student.UID})</span>`;
+                `<span style="color: blue;">Editing: ${student.Name} (${student.UID}) - Status: ${student.Status || "P"}</span>`;
         }
 
         // Delete student data
@@ -640,6 +1187,7 @@
                 studentData.splice(index, 1);
                 localStorage.setItem("studentData", JSON.stringify(studentData));
                 updateSubmittedList();
+                updateProgressSummary();
                 alert("Student data deleted successfully!");
             }
         }
@@ -663,6 +1211,7 @@
                 localStorage.setItem("studentData", JSON.stringify(studentData));
                 selectedStudents.clear();
                 updateSubmittedList();
+                updateProgressSummary();
                 alert(`${indices.length} student(s) deleted successfully!`);
             }
         }
@@ -678,7 +1227,15 @@
 
         // Clear all entered marks
         function clearMarks() {
-            document.querySelectorAll("input[type='number']").forEach(input => input.value = "");
+            document.querySelectorAll("input[type='number'], input[type='text']").forEach(input => {
+                input.type = "number";
+                input.readOnly = false;
+                input.min = "0";
+                input.max = questionMarks[input.id.replace('_marks', '')] || 0;
+                input.value = "";
+            });
+            document.getElementById("studentStatus").value = "P";
+            currentStatus = "P";
             updateCOMarks();
         }
 
@@ -689,6 +1246,7 @@
                 clearMarks();
                 document.getElementById("studentSelect").value = "";
                 document.getElementById("studentSelect").disabled = false;
+                document.getElementById("studentStatus").disabled = false;
                 
                 // Reset edit mode
                 editMode = false;
@@ -721,7 +1279,7 @@
             // Create header with only active COs
             let header = table.createTHead();
             let headerRow = header.insertRow();
-            ["Select", "No", "UID", "Name", ...Array.from(activeCOs).sort(), "Total Marks", "Actions"].forEach(text => {
+            ["Select", "No", "Name", "UID", ...Array.from(activeCOs).sort(), "Total Marks", "Actions"].forEach(text => {
                 let th = document.createElement("th");
                 th.textContent = text;
                 headerRow.appendChild(th);
@@ -748,12 +1306,24 @@
                 // CO marks
                 Array.from(activeCOs).sort().forEach(co => {
                     let cell = row.insertCell();
-                    cell.textContent = student[co] || 0;
+                    if (student.Status === "A") {
+                        cell.innerHTML = '<span class="status-A">A</span>';
+                    } else if (student.Status === "I") {
+                        cell.innerHTML = '<span class="status-I">I</span>';
+                    } else {
+                        cell.textContent = student[co] || 0;
+                    }
                 });
                 
                 // Total marks
                 let totalCell = row.insertCell();
-                totalCell.textContent = student["Total Marks"] || 0;
+                if (student.Status === "A") {
+                    totalCell.innerHTML = '<span class="status-A">A</span>';
+                } else if (student.Status === "I") {
+                    totalCell.innerHTML = '<span class="status-I">I</span>';
+                } else {
+                    totalCell.textContent = student["Total Marks"] || 0;
+                }
                 
                 // Action buttons
                 let actionCell = row.insertCell();
@@ -766,6 +1336,46 @@
             container.appendChild(table);
         }
 
+        // Update progress summary
+        function updateProgressSummary() {
+            const progressSummary = document.getElementById("progressSummary");
+            const totalStudentsCount = document.getElementById("totalStudentsCount");
+            const submittedStudentsCount = document.getElementById("submittedStudentsCount");
+            const pendingStudentsCount = document.getElementById("pendingStudentsCount");
+            const pendingStudentsList = document.getElementById("pendingStudentsList");
+            
+            if (studentList.length === 0) {
+                progressSummary.style.display = "none";
+                return;
+            }
+            
+            progressSummary.style.display = "block";
+            
+            const totalStudents = studentList.length;
+            const submittedStudents = studentData.length;
+            const pendingStudents = totalStudents - submittedStudents;
+            
+            totalStudentsCount.textContent = totalStudents;
+            submittedStudentsCount.textContent = submittedStudents;
+            pendingStudentsCount.textContent = pendingStudents;
+            
+            // Find which students are pending
+            const submittedUIDs = new Set(studentData.map(s => s.UID));
+            const pendingStudentsData = studentList.filter(s => !submittedUIDs.has(s.UID));
+            
+            if (pendingStudentsData.length === 0) {
+                pendingStudentsList.innerHTML = "<div class='pending-student'>All students have marks submitted!</div>";
+            } else {
+                pendingStudentsList.innerHTML = "";
+                pendingStudentsData.forEach(student => {
+                    const div = document.createElement("div");
+                    div.className = "pending-student";
+                    div.textContent = `${student.UID} - ${student.name}`;
+                    pendingStudentsList.appendChild(div);
+                });
+            }
+        }
+
         // Download data as CSV with each CO in separate row
         function downloadStudentCOData() {
             if (studentData.length === 0) {
@@ -774,7 +1384,7 @@
             }
             
             // Prepare header
-            let headers = ["Serial No", "UID", "Name", "CO", "Marks", "Total Marks"];
+            let headers = ["Serial No", "Name", "UID", "Status", "CO", "Marks", "Total Marks"];
             let csvContent = headers.join(",") + "\n";
             
             // Add data rows - one row per CO per student
@@ -787,9 +1397,10 @@
                         serialNo++,
                         student.UID,
                         `"${student.Name || student.UID}"`,
+                        student.Status || "P",
                         co,
-                        student[co] || 0,
-                        student["Total Marks"] || 0
+                        student.Status === "A" ? "A" : (student.Status === "I" ? "I" : (student[co] || 0)),
+                        student.Status === "A" ? "A" : (student.Status === "I" ? "I" : (student["Total Marks"] || 0))
                     ];
                     csvContent += row.join(",") + "\n";
                 });
