@@ -11,7 +11,7 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background: linear-gradient(to right, red, red);
+            background: linear-gradient(to bottom, red, rgb(100, 34, 255));
             color: white;
             margin: 0;
             padding: 0;
@@ -53,7 +53,7 @@
             top: 0;
         }
         .summary-box {
-            background: #f1f1f1;
+            background: #4ccaea82;
             padding: 12px;
             margin: 15px 0;
             border-radius: 8px;
@@ -229,6 +229,7 @@
         }
         .status-section {
             margin: 10px 0;
+            font-weight: bold;
         }
         .status-A {
             color: green;
@@ -335,7 +336,7 @@
                 <select id="studentSelect"></select>
                 
                 <div class="status-section">
-                    <label for="studentStatus">Status:</label>
+                    <label for="studentStatus"><b>Student Status</b></label>
                     <select id="studentStatus" onchange="handleStatusChange()">
                         <option value="P" selected>P (Present)</option>
                         <option value="A">A (Absent)</option>
@@ -418,8 +419,14 @@
         <div id="submittedStudents" style="margin-top: 15px; text-align: left;">
             <h3>Submitted Students:</h3>
             <div class="bulk-actions">
+                <label style="margin-right: 15px;">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)"> Select All
+                </label>
                 <button onclick="deleteSelectedStudents()" class="delete-btn">Delete Selected</button>
             </div>
+            <!-- <div class="bulk-actions">
+                <button onclick="deleteSelectedStudents()" class="delete-btn">Delete Selected</button>
+            </div> -->
             <div style="overflow-x: auto;">
                 <div id="submittedList"></div>
             </div>
@@ -428,16 +435,16 @@
         <div class="action-buttons">
             <button onclick="downloadStudentCOData()">Download All CO Data (CSV)</button>
             <button onclick="homePage()">Home Page</button>
-            <button onclick="resetPage()" style="background-color: #ff4444;">Reset Page</button>
+            <button onclick="resetPage()">Reset Page</button>
         </div>
     </div>
 
     <script>
         // Global variables
-        let studentData = JSON.parse(localStorage.getItem("studentData")) || [];
-        let questionMarks = JSON.parse(localStorage.getItem("questionMarks")) || {};
-        let selectedCOs = JSON.parse(localStorage.getItem("selectedCOs")) || {};
-        let studentList = JSON.parse(localStorage.getItem("studentList")) || [];
+        let studentData = [];
+        let questionMarks = {};
+        let selectedCOs = {};
+        let studentList = [];
         let currentStudent = null;
         let totalQMarks = 0;
         let activeCOs = new Set();
@@ -448,20 +455,69 @@
         let currentFileData = null;
         let currentFileType = null;
 
-        // Initialize the page
+        // Initialize the page - MODIFIED
         window.onload = function() {
-            // First load the question data
-            loadQuestionData();
+            // Load all data from localStorage first
+            loadPersistedData();
             
-            // Then load the rest of the data
-            loadData();
+            // Then initialize the UI
+            loadQuestionData();
             populateTable();
+            populateStudentDropdown();
             updateSubmittedList();
             updateProgressSummary();
             
-            // Ensure table is visible
+            // Show student list if available
+            if (studentList.length > 0) {
+                showStudentList();
+            }
+            
             document.getElementById("questionsTable").style.display = "table";
         };
+        function loadPersistedData() {
+            try {
+                // Load student data
+                const storedStudentData = localStorage.getItem("studentData");
+                if (storedStudentData) {
+                    studentData = JSON.parse(storedStudentData);
+                    if (!Array.isArray(studentData)) {
+                        studentData = [];
+                    }
+                }
+
+                // Load question marks
+                const storedMarks = localStorage.getItem("questionMarks");
+                if (storedMarks) {
+                    questionMarks = JSON.parse(storedMarks);
+                }
+
+                // Load COs
+                const storedCOs = localStorage.getItem("selectedCOs");
+                if (storedCOs) {
+                    selectedCOs = JSON.parse(storedCOs);
+                    Object.values(selectedCOs).forEach(co => {
+                        if (co && co !== "Not Assigned") {
+                            activeCOs.add(co);
+                        }
+                    });
+                }
+
+                // Load student list
+                const storedStudents = localStorage.getItem("studentList");
+                if (storedStudents) {
+                    studentList = JSON.parse(storedStudents);
+                    if (!Array.isArray(studentList)) {
+                        studentList = [];
+                    }
+                }
+            } catch (e) {
+                console.error("Error loading persisted data:", e);
+                // Reset to empty arrays if corrupted
+                studentData = [];
+                studentList = [];
+            }
+        }
+
 
         // New function to specifically load question data
         function loadQuestionData() {
@@ -477,7 +533,6 @@
             }
         }
 
-        // Initialize default questions if none exist
         function initializeDefaultQuestions() {
             questionMarks = {
                 "Q1": 0,
@@ -488,7 +543,16 @@
                 "Q6": 0,
                 "Q7": 0
             };
-            localStorage.setItem("questionMarks", JSON.stringify(questionMarks));
+            saveQuestionMarks();
+        }
+
+        // NEW FUNCTION: Save question marks
+        function saveQuestionMarks() {
+            try {
+                localStorage.setItem("questionMarks", JSON.stringify(questionMarks));
+            } catch (e) {
+                console.error("Error saving question marks:", e);
+            }
         }
 
         // Load data from localStorage
@@ -752,13 +816,13 @@
 }
 
 
-        // Upload student list from file (CSV or Excel)
-        async function uploadStudentList() {
+async function uploadStudentList() {
             let fileInput = document.getElementById("studentFile");
             let file = fileInput.files[0];
 
             if (!file) {
-                alert("Please select a file!");
+                document.getElementById("uploadStatus").innerHTML = 
+                    `<span style="color: red;">Please select a file!</span>`;
                 return;
             }
 
@@ -772,21 +836,34 @@
                     data = await processCSVFile(file);
                 }
                 
+                if (!data || data.length === 0) {
+                    throw new Error("File is empty or couldn't be processed");
+                }
+
                 let tempStudentList = [];
                 let duplicateCount = 0;
                 let seenCombinations = new Set();
                 
-                // Start from index 1 to skip header row (assuming first row is header)
+                // Process data rows
                 for (let i = 1; i < data.length; i++) {
-                    let row = data[i];
-                    if (row.length >= 3) { // Ensure we have at least columns A, B, and C
-                        let name = row[0] ? row[0].toString().trim() : ''; // Column A (Name)
-                        let uid = row[2] ? row[2].toString().trim() : ''; // Column C (UID)
+                    try {
+                        let row = data[i];
+                        if (!row) continue;
                         
-                        // Create a unique key combining UID and Name
+                        // Handle both array and object formats
+                        let name, uid;
+                        if (Array.isArray(row)) {
+                            name = row[0] ? row[0].toString().trim() : '';
+                            uid = row[2] ? row[2].toString().trim() : '';
+                        } else {
+                            name = row.Name ? row.Name.toString().trim() : '';
+                            uid = row.UID ? row.UID.toString().trim() : '';
+                        }
+                        
+                        if (!uid) continue; // Skip if no UID
+                        
                         let combinationKey = `${uid}_${name}`;
                         
-                        // Check if this UID-Name combination already exists
                         if (seenCombinations.has(combinationKey)) {
                             duplicateCount++;
                             continue;
@@ -794,20 +871,25 @@
                         
                         seenCombinations.add(combinationKey);
                         tempStudentList.push({ UID: uid, name: name });
+                    } catch (e) {
+                        console.error(`Error processing row ${i}:`, e);
                     }
+                }
+
+                if (tempStudentList.length === 0) {
+                    throw new Error("No valid student records found in file");
                 }
 
                 studentList = tempStudentList;
                 localStorage.setItem("studentList", JSON.stringify(studentList));
                 
-                let uploadStatus = document.getElementById("uploadStatus");
-                uploadStatus.innerHTML = 
+                document.getElementById("uploadStatus").innerHTML = 
                     `<span style="color: green;">Successfully uploaded ${studentList.length} students!</span>`;
                 
                 if (duplicateCount > 0) {
                     document.getElementById("duplicateWarning").style.display = "block";
                     document.getElementById("duplicateWarning").textContent = 
-                        `Note: ${duplicateCount} duplicate entries (same UID and Name) were removed from the list.`;
+                        `Note: ${duplicateCount} duplicate entries were removed.`;
                 } else {
                     document.getElementById("duplicateWarning").style.display = "none";
                 }
@@ -818,7 +900,7 @@
             } catch (error) {
                 console.error("Error processing student list:", error);
                 document.getElementById("uploadStatus").innerHTML = 
-                    `<span style="color: red;">Error processing file: ${error.message}</span>`;
+                    `<span style="color: red;">Error: ${error.message || "Failed to process file"}</span>`;
             }
         }
 
@@ -930,6 +1012,43 @@
             updateCODisplay();
             updateTotalMarksDisplay();
         }
+        // Toggle select all checkboxes
+function toggleSelectAll(selectAllCheckbox) {
+    let checkboxes = document.querySelectorAll('#submittedList input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+        // We need to manually trigger the selection since we're changing the checked property programmatically
+        let index = Array.from(checkboxes).indexOf(checkbox);
+        if (selectAllCheckbox.checked) {
+            selectedStudents.add(index);
+        } else {
+            selectedStudents.delete(index);
+        }
+    });
+}
+
+// Update the select all checkbox when individual checkboxes are clicked
+function updateSelectAllCheckbox() {
+    let checkboxes = document.querySelectorAll('#submittedList input[type="checkbox"]');
+    let selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    
+    if (checkboxes.length === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.disabled = true;
+        return;
+    }
+    
+    selectAllCheckbox.disabled = false;
+    let allChecked = true;
+    
+    checkboxes.forEach(checkbox => {
+        if (!checkbox.checked) {
+            allChecked = false;
+        }
+    });
+    
+    selectAllCheckbox.checked = allChecked;
+}
 
         // Update which COs to display based on assignments
         function updateCODisplay() {
@@ -1045,19 +1164,18 @@
             document.getElementById("totalMarksDisplay").innerText = `${totalObtainedMarks}/${totalQMarks}`;
         }
 
-        // Submit marks for selected student
         function submitStudentData() {
             let selectedUID = document.getElementById("studentSelect").value;
             
             if (!selectedUID) {
                 alert("Please select a student!");
-                return;
+                return false;
             }
 
             let student = studentList.find(s => s.UID === selectedUID);
             if (!student) {
                 alert("Student not found in list!");
-                return;
+                return false;
             }
 
             // Get current status
@@ -1114,32 +1232,44 @@
                 Status: status,
                 ...coMarks,
                 "Total Marks": status === "A" ? "A" : (status === "I" ? "I" : totalObtainedMarks),
-                "QuestionMarks": questionMarksData, // Store individual question marks
+                "QuestionMarks": questionMarksData,
                 Timestamp: new Date().toLocaleString()
             };
 
-            if (editMode && currentEditIndex !== -1) {
-                // Update existing record
-                studentData[currentEditIndex] = studentRecord;
-                editMode = false;
-                currentEditIndex = -1;
-                document.getElementById("studentSelect").disabled = false;
-                document.getElementById("studentStatus").disabled = false;
-                document.getElementById("currentStudent").innerHTML = "";
-            } else {
-                // Add new record
-                studentData.push(studentRecord);
-            }
+            try {
+                if (editMode && currentEditIndex !== -1) {
+                    // Update existing record
+                    studentData[currentEditIndex] = studentRecord;
+                } else {
+                    // Add new record
+                    studentData.push(studentRecord);
+                }
 
-            localStorage.setItem("studentData", JSON.stringify(studentRecord));
-            document.getElementById("currentStudent").innerHTML = 
-                `<span style="color: green;">Current: ${student.name} (${student.UID}) - Status: ${status}</span>`;
-            
-            updateSubmittedList();
-            updateProgressSummary();
-            clearMarks();
-            alert(`Marks ${editMode ? 'updated' : 'submitted'} for ${student.name} (${student.UID})`);
+                localStorage.setItem("studentData", JSON.stringify(studentData));
+                
+                document.getElementById("currentStudent").innerHTML = 
+                    `<span style="color: green;">Current: ${student.name} (${student.UID}) - Status: ${status}</span>`;
+                
+                updateSubmittedList();
+                updateProgressSummary();
+                clearMarks();
+                
+                if (editMode) {
+                    editMode = false;
+                    currentEditIndex = -1;
+                    document.getElementById("studentSelect").disabled = false;
+                    document.getElementById("studentStatus").disabled = false;
+                }
+                
+                alert(`Marks ${editMode ? 'updated' : 'submitted'} for ${student.name} (${student.UID})`);
+                return true;
+            } catch (e) {
+                console.error("Error saving student data:", e);
+                alert("Failed to save student data. Please try again.");
+                return false;
+            }
         }
+
 
         // Edit student data - Restores exact marks
         function editStudentData(index) {
@@ -1216,15 +1346,16 @@
             }
         }
 
+        
         // Toggle student selection
-        function toggleStudentSelection(index, checkbox) {
-            if (checkbox.checked) {
-                selectedStudents.add(index);
-            } else {
-                selectedStudents.delete(index);
-            }
-        }
-
+function toggleStudentSelection(index, checkbox) {
+    if (checkbox.checked) {
+        selectedStudents.add(index);
+    } else {
+        selectedStudents.delete(index);
+    }
+    updateSelectAllCheckbox(); // Add this line
+}
         // Clear all entered marks
         function clearMarks() {
             document.querySelectorAll("input[type='number'], input[type='text']").forEach(input => {
@@ -1241,8 +1372,9 @@
 
         // Reset entire page
         function resetPage() {
-            if (confirm("Are you sure you want to reset the entire page? This will clear all entered data.")) {
-                // Clear form inputs
+        if (confirm("Are you sure you want to reset ALL data? This will clear:\n- All entered marks\n- Uploaded student list\n- All submitted student data")) {
+            try {
+                // Clear all form inputs
                 clearMarks();
                 document.getElementById("studentSelect").value = "";
                 document.getElementById("studentSelect").disabled = false;
@@ -1258,9 +1390,32 @@
                 // Clear selected students
                 selectedStudents.clear();
                 
-                alert("Page has been reset. All entered data has been cleared.");
+                // Clear student list and data
+                studentList = [];
+                studentData = [];
+                
+                // Clear localStorage
+                localStorage.removeItem("studentList");
+                localStorage.removeItem("studentData");
+                
+                // Update UI
+                document.getElementById("studentList").innerHTML = "";
+                document.getElementById("studentListContainer").style.display = "none";
+                document.getElementById("studentSelect").innerHTML = '<option value="">-- Select Student --</option>';
+                document.getElementById("uploadStatus").innerHTML = "";
+                document.getElementById("duplicateWarning").style.display = "none";
+                
+                updateSubmittedList();
+                updateProgressSummary();
+                
+                alert("Page has been completely reset. All data has been cleared.");
+            } catch (e) {
+                console.error("Error resetting page:", e);
+                alert("Error resetting page. Please refresh manually.");
             }
         }
+    }
+
 
         // Update the submitted students list
         function updateSubmittedList() {
@@ -1334,6 +1489,7 @@
             });
             
             container.appendChild(table);
+            updateSelectAllCheckbox();
         }
 
         // Update progress summary
@@ -1423,6 +1579,11 @@
         function homePage() {
             window.location.href = "MST_CO_Calc_WL.html";
         }
+        window.addEventListener('beforeunload', function() {
+            // Any cleanup needed before page unload
+        });
+
     </script>
 </body>
 </html>
+<!-- this is my code and i want to add one oheckbox above the table and add the fucntio of box that when i select that box it will select all the checkbox of the Table. Write the cod for that check box . i will add in my code. -->
