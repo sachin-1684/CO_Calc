@@ -42,7 +42,7 @@
             font-size: 16px;
         }
         th {
-            background-color: #1565c0;
+            background-color: #ab1f1f;
             color: white;
         }
         button {
@@ -139,9 +139,9 @@
         function updateCOWeights() {
             let display = document.getElementById("coWeightage");
             display.innerHTML = "<h3>Total CO Weightage</h3><p>" +
-                Object.keys(coWeights).map(co => `<b>${co}:</b> ${coWeights[co]} marks`).join(' | ') + "</p>";
-        }
+                Object.keys(coWeights).map(co => `<b>${co}:</b> <span style="color: red;">${coWeights[co]} marks</span>`).join(' || ') + "</p>";
 
+        }
         function resetCO(co) {
             document.querySelectorAll(`input[data-co='${co}']`).forEach(checkbox => checkbox.checked = false);
             Object.keys(selectedCOs).forEach(q => {

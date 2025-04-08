@@ -320,7 +320,8 @@
                 </div>
                 <div class="file-input-container">
                     <input type="file" id="studentFile" accept=".csv,.xlsx,.xls">
-                    <button onclick="uploadStudentList()">Upload</button>
+                    <button onclick="uploadStudentList()">Upload List</button>
+                    <button onclick="removeMarksFile1()" class="delete-btn" style="display:none;" id="removeMarksBtn1">Remove File</button>
                 </div>
                 <div id="uploadStatus"></div>
                 <div id="duplicateWarning" class="duplicate-warning" style="display: none;"></div>
@@ -516,6 +517,13 @@
                 studentData = [];
                 studentList = [];
             }
+        }
+        function removeMarksFile1() {
+            
+            document.getElementById("studentFile").value = "";
+            document.getElementById("removeMarksBtn1").style.display = "none";          
+            
+           
         }
 
 
@@ -885,6 +893,7 @@ async function uploadStudentList() {
                 
                 document.getElementById("uploadStatus").innerHTML = 
                     `<span style="color: green;">Successfully uploaded ${studentList.length} students!</span>`;
+                    document.getElementById("removeMarksBtn1").style.display = "inline-block";
                 
                 if (duplicateCount > 0) {
                     document.getElementById("duplicateWarning").style.display = "block";
@@ -1161,7 +1170,7 @@ function updateSelectAllCheckbox() {
                 let marks = Number(document.getElementById(`${q}_marks`).value) || 0;
                 totalObtainedMarks += marks;
             });
-            document.getElementById("totalMarksDisplay").innerText = `${totalObtainedMarks}/${totalQMarks}`;
+            document.getElementById("totalMarksDisplay").innerText = `${totalObtainedMarks}/${totalQMarks - 10}`;
         }
 
         function submitStudentData() {

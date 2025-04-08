@@ -318,9 +318,11 @@
                     <label><input type="radio" name="studentFileType" value="csv" checked> CSV</label>
                     <label><input type="radio" name="studentFileType" value="excel"> Excel</label>
                 </div>
+                
                 <div class="file-input-container">
                     <input type="file" id="studentFile" accept=".csv,.xlsx,.xls">
                     <button onclick="uploadStudentList()">Upload</button>
+                    <button onclick="removeMarksFile1()" class="delete-btn" style="display:none;" id="removeMarksBtn1">Remove File</button>
                 </div>
                 <div id="uploadStatus"></div>
                 <div id="duplicateWarning" class="duplicate-warning" style="display: none;"></div>
@@ -684,11 +686,21 @@
         // Remove uploaded marks file
         function removeMarksFile() {
             document.getElementById("marksFile").value = "";
+            document.getElementById("studentFile").value = "";
             document.getElementById("removeMarksBtn").style.display = "none";
             document.getElementById("downloadUpdatedFile").style.display = "none";
             document.getElementById("marksUploadStatus").innerHTML = "";
+            
             currentFileData = null;
             currentFileType = null;
+        }
+        function removeMarksFile1() {
+            
+            document.getElementById("studentFile").value = "";
+            document.getElementById("removeMarksBtn1").style.display = "none";
+            
+            
+           
         }
 
         // Convert data to CSV format
@@ -885,6 +897,7 @@ async function uploadStudentList() {
                 
                 document.getElementById("uploadStatus").innerHTML = 
                     `<span style="color: green;">Successfully uploaded ${studentList.length} students!</span>`;
+                    document.getElementById("removeMarksBtn1").style.display = "inline-block";
                 
                 if (duplicateCount > 0) {
                     document.getElementById("duplicateWarning").style.display = "block";
