@@ -52,6 +52,53 @@
             position: sticky;
             top: 0;
         }
+        .learner-item {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+    }
+    .learner-item:hover {
+        background-color: #f5f5f5;
+    }
+    .learner-percentage {
+        font-weight: bold;
+    }
+    .slow-learner {
+        color: #ff9800;
+    }
+    .fast-learner {
+        color: #4caf50;
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 100;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 800px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .close:hover {
+        color: black;
+    }
         .summary-box {
             background: #4ccaea82;
             padding: 12px;
@@ -331,6 +378,26 @@
                     <button onclick="deleteStudentList()" class="delete-btn" style="margin-bottom: 8px;">Delete List</button>
                     <div id="studentList"></div>
                 </div>
+                <div class="learner-analysis-section" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <h3>Learner Analysis</h3>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button onclick="analyzeLearners('slow')" style="background-color: #ff9800; color: white;">
+                            <i class="fas fa-user-clock"></i> Identify Slow Learners (≤40%)
+                        </button>
+                        <button onclick="analyzeLearners('fast')" style="background-color: #4caf50; color: white;">
+                            <i class="fas fa-user-graduate"></i> Identify Fast Learners (≥85%)
+                        </button>
+                    </div>
+                    <div id="learnerResults" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <h4 id="learnerResultsTitle"></h4>
+                            <button onclick="downloadLearnerResults()" style="background-color: #2196F3; color: white;">
+                                <i class="fas fa-download"></i> Download List
+                            </button>
+                        </div>
+                        <div id="learnerResultsTable" style="overflow-x: auto;"></div>
+                    </div>
+                </div>
             </div>
             
             <div class="selection-section">
@@ -456,6 +523,188 @@
         let currentStatus = "P";
         let currentFileData = null;
         let currentFileType = null;
+        let currentLearnerResults = [];
+    let currentLearnerType = '';
+    function analyzeLearners(type) {
+        if (studentData.length === 0) {
+            alert("No student data available for analysis!");
+            return;
+        }
+        
+        currentLearnerType = type;
+        currentLearnerResults = [];
+        
+        // Get total possible marks from the first student (assuming all have same total)
+        const totalMarks = studentData[0]["Total Marks"] === "A" || studentData[0]["Total Marks"] === "I" ? 
+            totalQMarks : studentData[0]["Total Marks"];
+        
+        studentData.forEach(student => {
+            // Skip absent or detained students
+            if (student.Status === "A" || student.Status === "I") {
+                return;
+            }
+            
+            const studentMarks = student["Total Marks"];
+            const percentage = (studentMarks / totalQMarks) * 100;
+            
+            if (type === 'slow' && percentage <= 40) {
+                currentLearnerResults.push({
+                    uid: student.UID,
+                    name: student.Name,
+                    marks: studentMarks,
+                    percentage: percentage.toFixed(2),
+                    totalMarks: totalMarks,
+                    coMarks: getCOMarkDetails(student) // Get detailed CO marks
+                });
+            } else if (type === 'fast' && percentage >= 85) {
+                currentLearnerResults.push({
+                    uid: student.UID,
+                    name: student.Name,
+                    marks: studentMarks,
+                    percentage: percentage.toFixed(2),
+                    totalMarks: totalMarks,
+                    coMarks: getCOMarkDetails(student) // Get detailed CO marks
+                });
+            }
+        });
+        
+        displayLearnerResults();
+    }
+    function getCOMarkDetails(student) {
+        let coDetails = [];
+        activeCOs.forEach(co => {
+            if (student[co] !== undefined) {
+                coDetails.push({
+                    co: co,
+                    marks: student[co]
+                });
+            }
+        });
+        return coDetails;
+    }
+    
+    // Display learner results in the modal with detailed table
+    function displayLearnerResults() {
+    const modalTitle = document.getElementById("learnerModalTitle");
+    const summaryDiv = document.getElementById("learnerSummary");
+    const tableDiv = document.getElementById("learnerDetailsTable");
+    
+    if (currentLearnerResults.length === 0) {
+        modalTitle.textContent = `No ${currentLearnerType} learners found`;
+        summaryDiv.innerHTML = `<p>No students meet the criteria for ${currentLearnerType} learners.</p>`;
+        tableDiv.innerHTML = '';
+        document.getElementById("learnerModal").style.display = "block";
+        return;
+    }
+    
+    const typeName = currentLearnerType === 'slow' ? 'Slow' : 'Fast';
+    const criteria = currentLearnerType === 'slow' ? '≤40%' : '≥85%';
+    const totalMarks = currentLearnerResults[0]?.totalMarks || totalQMarks;
+    
+    modalTitle.textContent = `${typeName} Learners Analysis`;
+    
+    // Update summary section
+    summaryDiv.innerHTML = `
+        <p><strong>Total ${typeName} Learners:</strong> ${currentLearnerResults.length}</p>
+        <p><strong>Criteria:</strong> ${criteria} of total marks (${totalMarks})</p>
+        <p><strong>Average Percentage:</strong> ${calculateAveragePercentage()}%</p>
+    `;
+    
+    // Create detailed table
+    let html = `<table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <thead>
+            <tr style="background-color: #c01520; color: white;">
+                <th style="padding: 10px; text-align: left;">No.</th>
+                <th style="padding: 10px; text-align: left;">UID</th>
+                <th style="padding: 10px; text-align: left;">Name</th>
+                <th style="padding: 10px; text-align: center;">Marks Obtained</th>
+                <th style="padding: 10px; text-align: center;">Total Marks</th>
+                <th style="padding: 10px; text-align: center;">Percentage</th>
+            </tr>
+        </thead>
+        <tbody>`;
+    
+    // Add student rows with all details
+    currentLearnerResults.forEach((student, index) => {
+        // Ensure we have proper student data
+        const uid = student.uid || student.UID || '';
+        const name = student.name || student.Name || '';
+        const marks = student.marks || 0;
+        const percentage = student.percentage || '0.00';
+        
+        html += `
+        <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd; color: black;">${index + 1}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; color: black;">${uid}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; color: black;">${name}</td>
+             <td style="padding: 8px; border-bottom: 1px solid #ddd; color: black;">${marks}</td>
+             <td style="padding: 8px; border-bottom: 1px solid #ddd; color: black;">${totalMarks}</td>
+            <td style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd; 
+                font-weight: bold; color: ${currentLearnerType === 'slow' ? '#ff9800' : '#4caf50'};">
+                ${percentage}%
+            </td>
+        </tr>`;
+    });
+    
+    html += `</tbody></table>`;
+    tableDiv.innerHTML = html;
+    
+    document.getElementById("learnerModal").style.display = "block";
+}
+    // Helper function to calculate average percentage
+    function calculateAveragePercentage() {
+        if (currentLearnerResults.length === 0) return 0;
+        const total = currentLearnerResults.reduce((sum, student) => sum + parseFloat(student.percentage), 0);
+        return (total / currentLearnerResults.length).toFixed(2);
+    }
+    
+    // Close the learner modal
+    function closeLearnerModal() {
+        document.getElementById("learnerModal").style.display = "none";
+    }
+    
+    // Download learner results as CSV (unchanged from previous implementation)
+    function downloadLearnerResults() {
+        if (currentLearnerResults.length === 0) {
+            alert("No learner results to download!");
+            return;
+        }
+        
+        const type = currentLearnerType === 'slow' ? 'Slow' : 'Fast';
+        const filename = `${type}_Learners_List.csv`;
+        
+        let csvContent = "No,UID,Name,Marks,Total Marks,Percentage";
+        
+        // Add CO headers
+        activeCOs.forEach(co => {
+            csvContent += `,${co}`;
+        });
+        csvContent += "\n";
+        
+        // Add student data
+        currentLearnerResults.forEach((student, index) => {
+            csvContent += `${index + 1},${student.uid},"${student.name}",${student.marks},${student.totalMarks},${student.percentage}%`;
+            
+            // Add CO marks
+            activeCOs.forEach(co => {
+                const coMark = student.coMarks.find(item => item.co === co);
+                csvContent += `,${coMark ? coMark.marks : '-'}`;
+            });
+            
+            csvContent += "\n";
+        });
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
 
         // Initialize the page - MODIFIED
         window.onload = function() {
@@ -1597,6 +1846,20 @@ function toggleStudentSelection(index, checkbox) {
         });
 
     </script>
+    <div id="learnerModal" class="modal" style="display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-content" style="background-color: #fefefe; margin: 10% auto; padding: 20px; border-radius: 8px; width: 80%; max-width: 900px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+            <span class="close" onclick="closeLearnerModal()" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+            <h2 id="learnerModalTitle" style="color: #c01520; margin-bottom: 15px;"></h2>
+            <div id="learnerModalContent" style="max-height: 500px; overflow-y: auto;">
+                <div id="learnerSummary" style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;"></div>
+                <div id="learnerDetailsTable" style="overflow-x: auto;"></div>
+            </div>
+            <button onclick="downloadLearnerResults()" style="margin-top: 15px; background-color: #2196F3; color: white; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; float: right;">
+                <i class="fas fa-download"></i> Download List
+            </button>
+            <div style="clear: both;"></div>
+        </div>
+    </div>
 </body>
 </html>
 <!-- this is my code and i want to add one oheckbox above the table and add the fucntio of box that when i select that box it will select all the checkbox of the Table. Write the cod for that check box . i will add in my code. -->
