@@ -376,6 +376,7 @@
                 <div id="studentListContainer" class="student-list" style="display: none;">
                     <h3>Uploaded Students</h3>
                     <button onclick="deleteStudentList()" class="delete-btn" style="margin-bottom: 8px;">Delete List</button>
+                    <button onclick="sortStudentList()" class="delete-btn" style="margin-bottom: 8px;">Sort Student List</button>
                     <div id="studentList"></div>
                 </div>
                 <div class="learner-analysis-section" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
@@ -657,6 +658,8 @@
         const total = currentLearnerResults.reduce((sum, student) => sum + parseFloat(student.percentage), 0);
         return (total / currentLearnerResults.length).toFixed(2);
     }
+
+
     
     // Close the learner modal
     function closeLearnerModal() {
@@ -835,6 +838,27 @@
             updateInputFields();
             updateCOMarks();
         }
+        // Sort student list by UID
+function sortStudentList() {
+    if (studentList.length === 0) {
+        alert("No students to sort!");
+        return;
+    }
+    
+    // Sort by UID (convert to string for consistent comparison)
+    studentList.sort((a, b) => {
+        return a.UID.toString().localeCompare(b.UID.toString());
+    });
+    
+    // Update localStorage
+    localStorage.setItem("studentList", JSON.stringify(studentList));
+    
+    // Refresh the displays
+    showStudentList();
+    populateStudentDropdown();
+    
+    alert("Student list sorted by UID!");
+}
 
         // Update input fields based on status
         function updateInputFields() {
