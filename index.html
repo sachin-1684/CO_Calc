@@ -1,321 +1,350 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CUIMS - Chandigarh University</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-T48L6T4JYZ"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-T48L6T4JYZ');
-    </script>
-    <style>
-        :root {
-            --primary: #d32f2f;
-            --primary-dark: #b71c1c;
-            --secondary: #f5f5f5;
-            --white: #ffffff;
-            --text: #333333;
-            --text-light: #666666;
-            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #f5f5f5 0%, #e9e9e9 100%);
-            color: var(--text);
-            min-height: 100vh;
-        }
-        
-        .header {
-            background: linear-gradient(to right, red, rgb(100, 34, 255));
-            padding: 2rem 1rem;
-            color: var(--white);
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            opacity: 0.1;
-        }
-        
-        .header-content {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            position: relative;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CUIMS - Chandigarh University</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-T48L6T4JYZ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-T48L6T4JYZ');
+  </script>
+  <style>
+    :root {
+      --primary: #d32f2f;
+      --primary-dark: #b71c1c;
+      --secondary: #f5f5f5;
+      --white: #ffffff;
+      --text: #333333;
+      --text-light: #666666;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
 
-        .header-logo-center {
-            width: 150px;
-            margin-left: rem;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-        }
-        
-        .header-logo-left {
-            width: 200px;
-            margin-left: 28rem;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-            position: absolute;
-        }
-        
-        .header h1 {
-            font-size: 2.2rem;
-            font-weight: 500;
-            margin-top: rem;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        
-        .quick-links {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin: 1rem auto;
-            max-width: 1200px;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            display: inline-block;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 500;
-            text-decoration: none;
-            transition: var(--transition);
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            text-align: center;
-        }
-        
-        .btn-staff {
-            background: #3f51b5;
-            color: var(--white);
-        }
-        
-        .btn-staff:hover {
-            background: #303f9f;
-            transform: translateY(-2px);
-        }
-        
-        .btn-contact {
-            background: #4CAF50;
-            color: var(--white);
-        }
-        
-        .btn-contact:hover {
-            background: #3e8e41;
-            transform: translateY(-2px);
-        }
-        
-        .container {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            flex-wrap: wrap;
-            padding: 3rem 1rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .card {
-            background: var(--black);
-            border-radius: 16px;
-            box-shadow: var(--shadow);
-            text-align: center;
-            transition: var(--transition);
-            width: 100%;
-            max-width: 400px;
-            overflow: hidden;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-        }
-        
-        .card-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: var(--white);
-            padding: 1.5rem;
-        }
-        
-        .card-header .icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .card-header h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-        
-        .card-body {
-            padding: 2rem;
-        }
-        
-        .card-body p {
-            color: var(--text-light);
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
-        }
-        
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        
-        .btn-primary {
-            background: var(--primary);
-            color: var(--white);
-        }
-        
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-        
-        .btn-secondary {
-            background: var(--secondary);
-            color: var(--text);
-            border: 1px solid #ddd;
-        }
-        
-        .btn-secondary:hover {
-            background: #e0e0e0;
-            transform: translateY(-2px);
-        }
-        
-        .weather {
-            background: linear-gradient(to right, red, rgb(100, 34, 255));
-            color: var(--white);
-            padding: 1.5rem;
-            text-align: center;
-            margin-top: auto;
-            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .weather h3 {
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-        
-        .weather p {
-            font-size: 1rem;
-            opacity: 0.9;
-        }
-        
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .container {
-                padding: 2rem 1rem;
-            }
-            
-            .card {
-                max-width: 100%;
-            }
-            
-            .header-logo-left {
-                margin-left: 0;
-                position: relative;
-                width: 150px;
-                margin-top: 1rem;
-            }
-            
-            .quick-links {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
-    </style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f5f5f5 0%, #e9e9e9 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(to right, red, rgb(100, 34, 255));
+      padding: 2rem 1rem;
+      color: var(--white);
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      opacity: 0.1;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      position: relative;
+    }
+
+    .header-logo-center {
+      width: 150px;
+      margin-left: auto;
+      margin-right: auto;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+
+    .header-logo-left {
+      width: 200px;
+      margin-left: 28rem;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+      position: absolute;
+    }
+
+    .header h1 {
+      font-size: 2.2rem;
+      font-weight: 500;
+      margin-top: 1rem;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .quick-links {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin: 1rem auto;
+      max-width: 1200px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: var(--transition);
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    .btn-staff {
+      background: #3f51b5;
+      color: var(--white);
+    }
+
+    .btn-staff:hover {
+      background: #303f9f;
+      transform: translateY(-2px);
+    }
+
+    .btn-contact {
+      background: #4CAF50;
+      color: var(--white);
+    }
+
+    .btn-contact:hover {
+      background: #3e8e41;
+      transform: translateY(-2px);
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      padding: 3rem 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      text-align: center;
+      transition: var(--transition);
+      width: 100%;
+      max-width: 400px;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: var(--white);
+      padding: 1.5rem;
+    }
+
+    .card-header .icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-header h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-body {
+      padding: 2rem;
+    }
+
+    .card-body p {
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--white);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: var(--text);
+      border: 1px solid #ddd;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+      transform: translateY(-2px);
+    }
+
+    .weather {
+      background: linear-gradient(to right, red, rgb(100, 34, 255));
+      color: var(--white);
+      padding: 1.5rem;
+      text-align: center;
+      margin-top: auto;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .weather h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    .weather p {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .container {
+        padding: 2rem 1rem;
+      }
+
+      .card {
+        max-width: 100%;
+      }
+
+      .header-logo-left {
+        margin-left: 0;
+        position: relative;
+        width: 150px;
+        margin-top: 1rem;
+      }
+
+      .quick-links {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-content"></div>
-        <img class="header-logo-center" src="logo2.png" alt="CO-Master Logo">
-        <img class="header-logo-left" src="Logo.png" alt="Chandigarh University Logo">
-        <h1>Welcome to Chandigarh University Examination</h1> 
-        <h1>CO-MASTER</h1>
-    </div>
-   
-            
-    <div class="container">
-        <div class="card">
-            <div class="card-header">
-                <div class="icon"><i class="fas fa-book-open"></i></div>
-                <h2>End Semester Exams</h2>
-            </div>
-            <div class="card-body">
-                <p>Manage CO Calculations for End Semester Examinations with different options based on your requirements.</p>
-                <div class="btn-group">
-                    <a href="EST_CO_Calc_WOL.html" class="btn btn-primary">
-                        <i class="fas fa-calculator"></i> Use CO Calculator Only
-                    </a>
-                    <a href="EST_CO_Calc_WL.html" class="btn btn-secondary">
-                        <i class="fas fa-users"></i> <b>Calculate with Student List</b>
-                    </a>
-                </div>
-            </div>
+  <div class="header">
+    <div class="header-content"></div>
+    <img class="header-logo-center" src="logo2.png" alt="CO-Master Logo for Exam Portal">
+    <img class="header-logo-left" src="Logo.png" alt="Chandigarh University Logo">
+    <h1>Welcome to Chandigarh University Examination</h1> 
+    <h1>CO-MASTER</h1>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <div class="icon"><i class="fas fa-book-open"></i></div>
+        <h2>End Semester Exams</h2>
+      </div>
+      <div class="card-body">
+        <p>Manage CO Calculations for End Semester Examinations with different options based on your requirements.</p>
+        <div class="btn-group">
+          <a href="EST_CO_Calc_WOL.html" class="btn btn-primary"><i class="fas fa-calculator"></i> Use CO Calculator Only</a>
+          <a href="EST_CO_Calc_WL.html" class="btn btn-secondary"><i class="fas fa-users"></i> <b>Calculate with Student List</b></a>
         </div>
-        
-        <div class="card">
-            <div class="card-header">
-                <div class="icon"><i class="fas fa-clipboard-list"></i></div>
-                <h2>Mid Semester Exams</h2>
-            </div>
-            <div class="card-body">
-                <p>Manage CO Calculations for Mid Semester Examinations with different options based on your requirements.</p>
-                <div class="btn-group">
-                    <a href="MST_CO_Calc_WoL.html" class="btn btn-primary">
-                        <i class="fas fa-calculator"></i> Use CO Calculator Only
-                    </a>
-                    <a href="MST_CO_Calc_WL.html" class="btn btn-secondary">
-                        <i class="fas fa-users"></i> <b>Calculate with Student List</b>
-                    </a>
-                </div>
-            </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="icon"><i class="fas fa-clipboard-list"></i></div>
+        <h2>Mid Semester Exams</h2>
+      </div>
+      <div class="card-body">
+        <p>Manage CO Calculations for Mid Semester Examinations with different options based on your requirements.</p>
+        <div class="btn-group">
+          <a href="MST_CO_Calc_WoL.html" class="btn btn-primary"><i class="fas fa-calculator"></i> Use CO Calculator Only</a>
+          <a href="MST_CO_Calc_WL.html" class="btn btn-secondary"><i class="fas fa-users"></i> <b>Calculate with Student List</b></a>
         </div>
+      </div>
     </div>
-    <div class="quick-links">
-        <a href="https://staff.cuchd.in/" class="btn btn-staff" target="_blank">
-            <i class="fas fa-user-tie"></i> Staff Portal
-        </a>
-        <a href="contact.html" class="btn btn-contact">
-            <i class="fas fa-envelope"></i> Contact Us
-        </a>
-    </div>
-    <div class="weather">
-        <h3>GHARUAN WEATHER</h3>
-        <p><i class="fas fa-sun"></i> 36°C | Clear Sky</p>
-    </div>
+  </div>
+
+  <div class="quick-links">
+    <a href="https://staff.cuchd.in/" class="btn btn-staff" target="_blank">
+      <i class="fas fa-user-tie"></i> Staff Portal
+    </a>
+    <a href="contact.html" class="btn btn-contact">
+      <i class="fas fa-envelope"></i> Contact Us
+    </a>
+  </div>
+
+  <div class="weather" id="weather">
+    <h3>GHARUAN WEATHER</h3>
+    <p id="weather-info"><i class="fas fa-spinner fa-spin"></i> Loading...</p>
+  </div>
+
+  <script>
+    const API_KEY = '35098c00edce2fbfe4cd0fd5f62a88c6'; // ← Replace with your OpenWeatherMap API key
+    const city = 'Gharuan,IN';
+
+    async function fetchWeather() {
+      try {
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`);
+        const data = await res.json();
+
+        const temp = Math.round(data.main.temp);
+        const condition = data.weather[0].main;
+
+        const iconMap = {
+          Clear: '☀️',
+          Clouds: '☁️',
+          Rain: '🌧️',
+          Thunderstorm: '⛈️',
+          Drizzle: '🌦️',
+          Snow: '❄️',
+          Mist: '🌫️',
+          Haze: '🌫️',
+          Fog: '🌫️'
+        };
+
+        const icon = iconMap[condition] || '🌤️';
+        document.getElementById('weather-info').innerHTML = `${icon} ${temp}°C | ${condition}`;
+      } catch (err) {
+        document.getElementById('weather-info').innerHTML = "⚠️ Weather data unavailable";
+        console.error("Error fetching weather:", err);
+      }
+    }
+
+    fetchWeather();
+  </script>
 </body>
 </html>
