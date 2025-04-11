@@ -714,6 +714,10 @@
 
         // Initialize the page - MODIFIED
         window.onload = function() {
+            let resetPressed = localStorage.getItem("resetPressed");
+    
+             // Set the reset flag to false when page loads (meaning checkboxes should be disabled)
+localStorage.setItem("resetPressed", "false");
             // Load all data from localStorage first
             loadPersistedData();
             
@@ -1906,11 +1910,18 @@ function toggleStudentSelection(index, checkbox) {
 
         // Return to home page
         function homePage() {
+            
             window.location.href = "MST_CO_Calc_WL.html";
         }
         window.addEventListener('beforeunload', function() {
             // Any cleanup needed before page unload
         });
+        function resetCOMarks() {
+    // ... existing reset code ...
+    
+    // Set the reset flag to true when reset button is pressed
+    localStorage.setItem("resetPressed", "true");
+}
 
     </script>
     <div id="learnerModal" class="modal" style="display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">

@@ -72,7 +72,6 @@
             background-color: #b71c1c;
         }
         #coWeightage p {
-            
             font-size: 18px;
             font-weight: bold;
         }
@@ -90,7 +89,7 @@
     <script>
         let selectedCOs = JSON.parse(localStorage.getItem("selectedCOs")) || {};
         let questionMarks = JSON.parse(localStorage.getItem("questionMarks")) || {};
-        let coWeights = JSON.parse(localStorage.getItem("coWeights")) || { CO1: 0,     CO2: 0,    CO3: 0,     CO4: 0,     CO5: 0 };
+        let coWeights = JSON.parse(localStorage.getItem("coWeights")) || { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
 
         function toggleSelection(question, co, checkbox) {
             let marks = document.querySelector(`tr[data-question='${question}'] select`).value;
@@ -141,7 +140,6 @@
             let display = document.getElementById("coWeightage");
             display.innerHTML = "<h3>Total CO Weightage</h3><p>" +
                 Object.keys(coWeights).map(co => `<b>${co}:</b> <span style="color: red;">${coWeights[co]} marks</span>`).join(' || ') + "</p>";
-
         }
 
         function resetCO(co) {
@@ -165,11 +163,23 @@
                 alert("Please map all questions to a CO before submitting.");
                 return;
             }
+            
+            // Determine which COs are actually used
+            let usedCOs = [];
+            Object.keys(coWeights).forEach(co => {
+                if (coWeights[co] > 0) {
+                    usedCOs.push(co);
+                }
+            });
+            
+            // Store the used COs in localStorage
+            localStorage.setItem("usedCOs", JSON.stringify(usedCOs));
+            
             saveSelections();
             window.location.href = "CO_Calc.html";
         }
+
         function mainPage() {
-            
             window.location.href = "index.html";
         }
 
@@ -186,6 +196,21 @@
         }
 
         window.onload = function () {
+            let resetPressed = localStorage.getItem("resetPressed");
+    
+            // If reset was not pressed, disable checkboxes
+            if (resetPressed === "false") {
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.disabled = true;
+                });
+            } else {
+                // If reset was pressed, enable checkboxes
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.disabled = false;
+                });
+                // Reset the flag for future use
+                localStorage.setItem("resetPressed", "false");
+            }
             restoreSelections();
             updateCOWeights();
         };
@@ -195,7 +220,7 @@
     <h1>Welcome to Chandigarh University Exams</h1>
     <button onclick="mainPage()" style="background-color: green; color: white; padding: 10px 20px; border: none; border-radius: 5px;">
         Go to DashBoard
-      </button>
+    </button>
     <div class="container">
         <table>
             <tr>

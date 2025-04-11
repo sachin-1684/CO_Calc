@@ -82,8 +82,8 @@
     }
 
     .header h1 {
-      font-size: 2.2rem;
-      font-weight: 500;
+      font-size: 2.8rem;
+      font-weight: 700;
       margin-top: 1rem;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
@@ -159,7 +159,7 @@
     }
 
     .card-header {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      background: linear-gradient(135deg, var(--primary) 50%, var(--primary-dark) 50%);
       color: var(--white);
       padding: 1.5rem;
     }
@@ -202,13 +202,13 @@
     }
 
     .btn-secondary {
-      background: var(--secondary);
+      background:  #ad35313c;
       color: var(--text);
-      border: 1px solid #ddd;
+      border: 1px solid #f1f6f5;
     }
 
     .btn-secondary:hover {
-      background: #e0e0e0;
+      background: #fefffe;
       transform: translateY(-2px);
     }
 
@@ -227,7 +227,7 @@
   text-align: center;
   margin-top: 0.5rem;
   font-style: italic;
-  animation: fadeInUp 1s ease-in-out;
+  animation: fadeInUp 3s ease-in-out;
 }
 
     .weather h3 {
@@ -318,13 +318,13 @@
   </div>
 
   <div class="weather" id="weather">
-    <h3>GHARUAN WEATHER</h3>
+    <h3>KHARAR WEATHER</h3>
     <p id="weather-info"><i class="fas fa-spinner fa-spin"></i> Loading...</p>
   </div>
 
   <script>
     const API_KEY = '35098c00edce2fbfe4cd0fd5f62a88c6'; // ← Replace with your OpenWeatherMap API key
-    const city = 'Gharuan,IN';
+    const city = 'Kharar,IN';
 
     async function fetchWeather() {
       try {

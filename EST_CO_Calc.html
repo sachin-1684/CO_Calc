@@ -106,6 +106,8 @@
 
             let storedCOs = localStorage.getItem("selectedCOs");
             if (storedCOs) selectedCOs = JSON.parse(storedCOs);
+            // Set the reset flag to false when page loads (meaning checkboxes should be disabled)
+            localStorage.setItem("resetPressed", "false");          
 
             populateTable();
         };
@@ -162,6 +164,7 @@
         }
 
         function resetCOMarks() {
+            localStorage.setItem("resetPressed", "true");
             document.querySelectorAll("input[type='number']").forEach(input => input.value = "");
             Object.keys(coMarks).forEach(co => coMarks[co] = 0);
 
@@ -211,7 +214,9 @@
         </div>
 
         <button onclick="resetCOMarks()">Reset CO Marks</button>
-        <button onclick="homePage()">Home Page</button>
+        <button onclick="homePage()" style="background-color: green; color: white; padding: 10px 20px; border: none; border-radius: 5px;">
+            Go Back
+          </button>
     </div>
 </body>
 </html>

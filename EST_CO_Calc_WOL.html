@@ -180,9 +180,25 @@
         }
 
         window.onload = function () {
+            let resetPressed = localStorage.getItem("resetPressed");
+    
+    // If reset was not pressed, disable checkboxes
+    if (resetPressed === "false") {
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.disabled = true;
+        });
+    } else {
+        // If reset was pressed, enable checkboxes
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.disabled = false;
+        });
+        // Reset the flag for future use
+        localStorage.setItem("resetPressed", "false");
+    }
             restoreSelections();
             updateCOWeights();
         };
+            
     </script>
 </head>
 <body>

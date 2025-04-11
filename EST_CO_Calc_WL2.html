@@ -709,10 +709,18 @@
         a.click();
         document.body.removeChild(a);
     }
+    function resetCOMarks() {
+    // ... existing reset code ...
+    
+    // Set the reset flag to true when reset button is pressed
+    localStorage.setItem("resetPressed", "true");
+}
 
 
         // Initialize the page - MODIFIED
         window.onload = function() {
+            // Set the reset flag to false when page loads (meaning checkboxes should be disabled)
+localStorage.setItem("resetPressed", "false");
             // Load all data from localStorage first
             loadPersistedData();
             
@@ -1449,7 +1457,7 @@ function updateSelectAllCheckbox() {
                 let marks = Number(document.getElementById(`${q}_marks`).value) || 0;
                 totalObtainedMarks += marks;
             });
-            document.getElementById("totalMarksDisplay").innerText = `${totalObtainedMarks}/${totalQMarks}`;
+            document.getElementById("totalMarksDisplay").innerText = `${totalObtainedMarks}/${totalQMarks-10}`;
         }
 
         function submitStudentData() {

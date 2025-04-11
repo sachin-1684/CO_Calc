@@ -78,7 +78,6 @@
             background-color: #0d47a1;
             transform: scale(1.05);
         }
-        /* Responsive Design */
         @media (max-width: 600px) {
             th, td {
                 font-size: 14px;
@@ -97,7 +96,7 @@
     <script>
         let questionMarks = {};
         let selectedCOs = {};
-        let coMarks = { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
+        let coMarks = {};
 
         window.onload = function () {
             let storedMarks = localStorage.getItem("questionMarks");
@@ -106,34 +105,62 @@
             let storedCOs = localStorage.getItem("selectedCOs");
             if (storedCOs) selectedCOs = JSON.parse(storedCOs);
 
+            // Initialize coMarks only for used COs
+            let usedCOs = JSON.parse(localStorage.getItem("usedCOs")) || [];
+            usedCOs.forEach(co => {
+                coMarks[co] = 0;
+            });
+
+            createCOMarksDisplay();
             populateTable();
         };
+
+        function createCOMarksDisplay() {
+            let usedCOs = JSON.parse(localStorage.getItem("usedCOs")) || [];
+            let container = document.getElementById("coMarksContainer");
+            container.innerHTML = '';
+            
+            usedCOs.forEach(co => {
+                let p = document.createElement("p");
+                p.innerHTML = `<b>${co} :</b> <span id="${co.toLowerCase()}Marks" class="red-bold">0</span>`;
+                container.appendChild(p);
+            });
+        }
 
         function populateTable() {
             let tableBody = document.getElementById("coTableBody");
             let totalQMarks = 0;
+            let usedCOs = JSON.parse(localStorage.getItem("usedCOs")) || [];
 
             Object.keys(questionMarks).forEach(q => {
                 let maxMarks = questionMarks[q] || 0;
-                totalQMarks += maxMarks;
                 let co = selectedCOs[q] || "Not Assigned";
 
-                let row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${q}</td>
-                    <td>${maxMarks}</td>
-                    <td>${co}</td>
-                    <td><input type="number" min="0" max="${maxMarks}" id="${q}_marks" oninput="updateCOMarks()"></td>
-                `;
-                tableBody.appendChild(row);
+                // Only include the row if its CO is in the usedCOs list
+                if (usedCOs.includes(co)) {
+                    totalQMarks += maxMarks;
+                    let row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${q}</td>
+                        <td>${maxMarks}</td>
+                        <td>${co}</td>
+                        <td><input type="number" min="0" max="${maxMarks}" id="${q}_marks" oninput="updateCOMarks()"></td>
+                    `;
+                    tableBody.appendChild(row);
+                }
             });
-
             
+            document.getElementById("totalQMarks").innerText = totalQMarks;
         }
 
         function updateCOMarks() {
             let totalCOMarks = 0;
-            coMarks = { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
+            let usedCOs = JSON.parse(localStorage.getItem("usedCOs")) || [];
+            
+            // Reset coMarks for used COs
+            usedCOs.forEach(co => {
+                coMarks[co] = 0;
+            });
 
             Object.keys(questionMarks).forEach(q => {
                 let marks = Number(document.getElementById(`${q}_marks`).value) || 0;
@@ -145,30 +172,30 @@
                     marks = questionMarks[q];
                 }
 
-                if (assignedCO && assignedCO !== "Not Assigned") {
+                if (assignedCO && assignedCO !== "Not Assigned" && usedCOs.includes(assignedCO)) {
                     coMarks[assignedCO] += marks;
                 }
                 totalCOMarks += marks;
             });
 
-            document.getElementById("co1Marks").innerText = coMarks["CO1"];
-            document.getElementById("co2Marks").innerText = coMarks["CO2"];
-            document.getElementById("co3Marks").innerText = coMarks["CO3"];
-            document.getElementById("co4Marks").innerText = coMarks["CO4"];
-            document.getElementById("co5Marks").innerText = coMarks["CO5"];
+            // Update display only for used COs
+            usedCOs.forEach(co => {
+                document.getElementById(`${co.toLowerCase()}Marks`).innerText = coMarks[co] || 0;
+            });
+            
             document.getElementById("totalCOMarks").innerText = totalCOMarks;
             document.getElementById("totalQMarks").innerText = totalCOMarks;
         }
 
         function resetCOMarks() {
             document.querySelectorAll("input[type='number']").forEach(input => input.value = "");
-            Object.keys(coMarks).forEach(co => coMarks[co] = 0);
-
-            document.getElementById("co1Marks").innerText = 0;
-            document.getElementById("co2Marks").innerText = 0;
-            document.getElementById("co3Marks").innerText = 0;
-            document.getElementById("co4Marks").innerText = 0;
-            document.getElementById("co5Marks").innerText = 0;
+            
+            let usedCOs = JSON.parse(localStorage.getItem("usedCOs")) || [];
+            usedCOs.forEach(co => {
+                coMarks[co] = 0;
+                document.getElementById(`${co.toLowerCase()}Marks`).innerText = 0;
+            });
+            
             document.getElementById("totalCOMarks").innerText = 0;
             document.getElementById("totalQMarks").innerText = 0;
         }
@@ -195,22 +222,18 @@
             <p>Total Q1 - Q7 Marks: <span id="totalQMarks" class="red-bold">0</span></p>
         </div>
 
-        <div class="co-marks-box">
-            <p><b>CO1 :</b> <span id="co1Marks" class="red-bold">0</span></p>
-            <p><b>CO2 :</b> <span id="co2Marks" class="red-bold">0</span></p>
-            <p><b>CO3 :</b> <span id="co3Marks" class="red-bold">0</span></p>
-            <p><b>CO4 :</b> <span id="co4Marks" class="red-bold">0</span></p>
-            <p><b>CO5 :</b> <span id="co5Marks" class="red-bold">0</span></p>
+        <div class="co-marks-box" id="coMarksContainer">
+            <!-- CO marks will be dynamically inserted here -->
         </div>
 
         <div class="summary-box">
-            <p>Total CO Marks Assigned: <span id="totalCOMarks"class="red-bold">0</span></p>
-            
-
+            <p>Total CO Marks Assigned: <span id="totalCOMarks" class="red-bold">0</span></p>
         </div>
 
         <button onclick="resetCOMarks()">Reset CO Marks</button>
-        <button onclick="homePage()">Home Page</button>
+        <button onclick="homePage()" style="background-color: green; color: white; padding: 10px 20px; border: none; border-radius: 5px;">
+            Go Back
+          </button>
     </div>
 </body>
 </html>
