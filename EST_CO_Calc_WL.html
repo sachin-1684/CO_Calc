@@ -18,6 +18,12 @@
             font-weight: bold;
             margin-top: 20px;
         }
+        h3 {
+            font-size: 25px;
+            color: rgb(50, 50, 200);
+            font-weight: bold;
+            margin-top: 20px;
+        }
         .container {
             background: white;
             padding: 20px;
@@ -41,13 +47,13 @@
             font-size: 16px;
         }
         th {
-            background-color: #1565c0;
+            background-color: #c01520;
             color: white;
         }
         button {
             margin-top: 15px;
             padding: 12px 20px;
-            background-color: #c01515;
+            background-color: #c01520;
             color: white;
             border: none;
             border-radius: 6px;
@@ -66,9 +72,8 @@
             background-color: #b71c1c;
         }
         #coWeightage p {
-            /* background-color: #40b71c; */
             font-size: 18px;
-            /* font-weight: bold; */
+            font-weight: bold;
         }
         @media (max-width: 600px) {
             th, td {
@@ -82,9 +87,20 @@
         }
     </style>
     <script>
-        let selectedCOs = JSON.parse(localStorage.getItem("selectedCOs")) || {};
-        let questionMarks = JSON.parse(localStorage.getItem("questionMarks")) || {};
-        let coWeights = JSON.parse(localStorage.getItem("coWeights")) || { CO1: 0,     CO2: 0,    CO3: 0,     CO4: 0,     CO5: 0 };
+        // Unique page ID for this page
+        const pageId = "page2"; // You can change this to any unique identifier
+
+        // Initialize data from localStorage, scoped to pageId
+        let pageData = JSON.parse(localStorage.getItem(pageId)) || {
+            selectedCOs: {},
+            questionMarks: {},
+            coWeights: { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 },
+            resetPressed: "false"
+        };
+
+        let selectedCOs = pageData.selectedCOs;
+        let questionMarks = pageData.questionMarks;
+        let coWeights = pageData.coWeights;
 
         function toggleSelection(question, co, checkbox) {
             let marks = document.querySelector(`tr[data-question='${question}'] select`).value;
@@ -125,16 +141,18 @@
                 }
                 questionMarks[qId] = markValue;
             });
-            localStorage.setItem("selectedCOs", JSON.stringify(selectedCOs));
-            localStorage.setItem("questionMarks", JSON.stringify(questionMarks));
-            localStorage.setItem("coWeights", JSON.stringify(coWeights));
+            // Save all data under pageId
+            pageData.selectedCOs = selectedCOs;
+            pageData.questionMarks = questionMarks;
+            pageData.coWeights = coWeights;
+            localStorage.setItem(pageId, JSON.stringify(pageData));
             updateCOWeights();
         }
 
         function updateCOWeights() {
             let display = document.getElementById("coWeightage");
             display.innerHTML = "<h3>Total CO Weightage</h3><p>" +
-                Object.keys(coWeights).map(co => `<b>${co}:</b> ${coWeights[co]} marks`).join(' | ') + "</p>";
+                Object.keys(coWeights).map(co => `<b>${co}:</b> <span style="color: red;">${coWeights[co]} marks</span>`).join(' || ') + "</p>";
         }
 
         function resetCO(co) {
@@ -149,22 +167,33 @@
         }
 
         function resetAll() {
-            localStorage.clear();
+            pageData = {
+                selectedCOs: {},
+                questionMarks: {},
+                coWeights: { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 },
+                resetPressed: "true"
+            };
+            localStorage.setItem(pageId, JSON.stringify(pageData));
+            localStorage.setItem("resetPressed", "true");
             location.reload();
         }
 
         function saveAndProceed() {
-            if (Object.keys(selectedCOs).length < 7) {
-                alert("Please map all questions to a CO before submitting.");
-                return;
-            }
-            saveSelections();
-            window.location.href = "EST_CO_Calc_WL2.html";
-        }
+    if (Object.keys(selectedCOs).length < 13) {
+        alert("Please map all questions to a CO before submitting.");
+        return;
+    }
+    saveSelections();
+    // Store the question order explicitly
+    pageData.questionOrder = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Q11", "Q12", "Q13"];
+    localStorage.setItem(pageId, JSON.stringify(pageData));
+    window.location.href = `EST_CO_Calc_WL2.html?pageId=${pageId}`;
+}
+
         function mainPage() {
-            
             window.location.href = "index.html";
         }
+
         function restoreSelections() {
             Object.keys(selectedCOs).forEach(question => {
                 let co = selectedCOs[question];
@@ -178,20 +207,18 @@
         }
 
         window.onload = function () {
-            let resetPressed = localStorage.getItem("resetPressed");
-           // If reset was not pressed, disable checkboxes
-    if (resetPressed === "false") {
-        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-            checkbox.disabled = true;
-        });
-    } else {
-        // If reset was pressed, enable checkboxes
-        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-            checkbox.disabled = false;
-        });
-        // Reset the flag for future use
-        localStorage.setItem("resetPressed", "false");
-    }
+            // Use resetPressed from pageData
+            if (pageData.resetPressed === "false") {
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.disabled = true;
+                });
+            } else {
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.disabled = false;
+                });
+                pageData.resetPressed = "false";
+                localStorage.setItem(pageId, JSON.stringify(pageData));
+            }
             restoreSelections();
             updateCOWeights();
         };
@@ -201,7 +228,7 @@
     <h1>Welcome to Chandigarh University Exams</h1>
     <button onclick="mainPage()" style="background-color: green; color: white; padding: 10px 20px; border: none; border-radius: 5px;">
         Go to DashBoard
-      </button>
+    </button>
     <div class="container">
         <table>
             <tr>
@@ -214,7 +241,7 @@
                 <th>CO5</th>
             </tr>
             <script>
-                const questions = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Q11", "Q12", "Q13"];
+                const questions = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7","Q8","Q9","Q10","Q11","Q12","Q13"];
                 questions.forEach(q => {
                     document.write(`<tr data-question="${q}"><td>${q}</td><td><select onchange="saveSelections()">${Array.from({ length: 11 }, (_, i) => `<option value="${i}">${i}</option>`).join('')}</select></td>`);
                     ["CO1", "CO2", "CO3", "CO4", "CO5"].forEach(co => {
@@ -233,7 +260,7 @@
         <button onclick="resetCO('CO4')">Reset CO4</button>
         <button onclick="resetCO('CO5')">Reset CO5</button>
         <button onclick="resetAll()">Reset All</button>
-        <button onclick="saveAndProceed()">Proceed With Student List</button>
+        <button onclick="saveAndProceed()">Proceed With Students List</button>
     </div>
 </body>
 </html>

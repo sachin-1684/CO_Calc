@@ -95,7 +95,7 @@
     </style>
     <script>
         // Use the same PAGE_ID as in MST_CO_Calc_WL1.html
-        const PAGE_ID = "WL3";
+        const PAGE_ID = "WL1";
         
         let questionMarks = {};
         let selectedCOs = {};
@@ -145,7 +145,7 @@
             let usedCOs = JSON.parse(localStorage.getItem("usedCOs")) || [];
 
             // Create rows for all questions (Q1-Q7)
-            for (let i = 1; i <= 13; i++) {
+            for (let i = 1; i <= 7; i++) {
                 let q = `Q${i}`;
                 let maxMarks = questionMarks[q] || 0;
                 let co = selectedCOs[q] || "Not Assigned";
@@ -164,24 +164,10 @@
                 }
             }
             
-            document.getElementById("totalQMarks").innerText = totalQMarks-10;
+            document.getElementById("totalQMarks").innerText = totalQMarks;
         }
 
         function updateCOMarks() {
-
-            let q12Marks = Number(document.getElementById('Q12_marks')?.value) || 0;
-            let q13Marks = Number(document.getElementById('Q13_marks')?.value) || 0;
-            
-            if (q12Marks > 0 && q13Marks > 0) {
-                alert("Overattempt detected! You cannot attempt both Q12 and Q13. Please attempt only one of them.");
-                // Reset both inputs
-                if (document.getElementById('Q12_marks')) document.getElementById('Q12_marks').value = '';
-                if (document.getElementById('Q13_marks')) document.getElementById('Q13_marks').value = '';
-                return;
-            }
-
-
-
             let totalCOMarks = 0;
             let usedCOs = JSON.parse(localStorage.getItem("usedCOs")) || [];
             
@@ -191,7 +177,7 @@
             });
 
             // Update marks for all questions
-            for (let i = 1; i <= 13; i++) {
+            for (let i = 1; i <= 7; i++) {
                 let q = `Q${i}`;
                 let inputElement = document.getElementById(`${q}_marks`);
                 if (inputElement) {
@@ -235,7 +221,7 @@
         }
 
         function homePage() {
-            window.location.href = "EST_CO_Calc_WOL.html";
+            window.location.href = "MST_CO_Calc_WOL.html";
         }
     </script>
 </head>
@@ -253,7 +239,7 @@
         </table>
 
         <div class="summary-box">
-            <p>Total Question Marks: <span id="totalQMarks" class="red-bold">0</span></p>
+            <p>Total Q1 - Q7 Marks: <span id="totalQMarks" class="red-bold">0</span></p>
         </div>
 
         <div class="co-marks-box" id="coMarksContainer">

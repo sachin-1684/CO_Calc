@@ -72,7 +72,6 @@
             background-color: #b71c1c;
         }
         #coWeightage p {
-            
             font-size: 18px;
             font-weight: bold;
         }
@@ -88,9 +87,20 @@
         }
     </style>
     <script>
-        let selectedCOs = JSON.parse(localStorage.getItem("selectedCOs")) || {};
-        let questionMarks = JSON.parse(localStorage.getItem("questionMarks")) || {};
-        let coWeights = JSON.parse(localStorage.getItem("coWeights")) || { CO1: 0,     CO2: 0,    CO3: 0,     CO4: 0,     CO5: 0 };
+        // Unique page ID for this page
+        const pageId = "page1"; // You can change this to any unique identifier
+
+        // Initialize data from localStorage, scoped to pageId
+        let pageData = JSON.parse(localStorage.getItem(pageId)) || {
+            selectedCOs: {},
+            questionMarks: {},
+            coWeights: { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 },
+            resetPressed: "false"
+        };
+
+        let selectedCOs = pageData.selectedCOs;
+        let questionMarks = pageData.questionMarks;
+        let coWeights = pageData.coWeights;
 
         function toggleSelection(question, co, checkbox) {
             let marks = document.querySelector(`tr[data-question='${question}'] select`).value;
@@ -131,9 +141,11 @@
                 }
                 questionMarks[qId] = markValue;
             });
-            localStorage.setItem("selectedCOs", JSON.stringify(selectedCOs));
-            localStorage.setItem("questionMarks", JSON.stringify(questionMarks));
-            localStorage.setItem("coWeights", JSON.stringify(coWeights));
+            // Save all data under pageId
+            pageData.selectedCOs = selectedCOs;
+            pageData.questionMarks = questionMarks;
+            pageData.coWeights = coWeights;
+            localStorage.setItem(pageId, JSON.stringify(pageData));
             updateCOWeights();
         }
 
@@ -141,7 +153,6 @@
             let display = document.getElementById("coWeightage");
             display.innerHTML = "<h3>Total CO Weightage</h3><p>" +
                 Object.keys(coWeights).map(co => `<b>${co}:</b> <span style="color: red;">${coWeights[co]} marks</span>`).join(' || ') + "</p>";
-
         }
 
         function resetCO(co) {
@@ -156,7 +167,14 @@
         }
 
         function resetAll() {
-            localStorage.clear();
+            pageData = {
+                selectedCOs: {},
+                questionMarks: {},
+                coWeights: { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 },
+                resetPressed: "true"
+            };
+            localStorage.setItem(pageId, JSON.stringify(pageData));
+            localStorage.setItem("resetPressed", "true");
             location.reload();
         }
 
@@ -166,10 +184,11 @@
                 return;
             }
             saveSelections();
-            window.location.href = "MST_CO_Calc_WL2.html";
+            // Pass pageId to Page 2 via URL
+            window.location.href = `MST_CO_Calc_WL2.html?pageId=${pageId}`;
         }
+
         function mainPage() {
-            
             window.location.href = "index.html";
         }
 
@@ -186,20 +205,18 @@
         }
 
         window.onload = function () {
-            let resetPressed = localStorage.getItem("resetPressed");
-           // If reset was not pressed, disable checkboxes
-    if (resetPressed === "false") {
-        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-            checkbox.disabled = true;
-        });
-    } else {
-        // If reset was pressed, enable checkboxes
-        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-            checkbox.disabled = false;
-        });
-        // Reset the flag for future use
-        localStorage.setItem("resetPressed", "false");
-    }
+            // Use resetPressed from pageData
+            if (pageData.resetPressed === "false") {
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.disabled = true;
+                });
+            } else {
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.disabled = false;
+                });
+                pageData.resetPressed = "false";
+                localStorage.setItem(pageId, JSON.stringify(pageData));
+            }
             restoreSelections();
             updateCOWeights();
         };
@@ -209,7 +226,7 @@
     <h1>Welcome to Chandigarh University Exams</h1>
     <button onclick="mainPage()" style="background-color: green; color: white; padding: 10px 20px; border: none; border-radius: 5px;">
         Go to DashBoard
-      </button>
+    </button>
     <div class="container">
         <table>
             <tr>
@@ -241,7 +258,7 @@
         <button onclick="resetCO('CO4')">Reset CO4</button>
         <button onclick="resetCO('CO5')">Reset CO5</button>
         <button onclick="resetAll()">Reset All</button>
-        <button onclick="saveAndProceed()">Proceed With Students List </button>
+        <button onclick="saveAndProceed()">Proceed With Students List</button>
     </div>
 </body>
 </html>

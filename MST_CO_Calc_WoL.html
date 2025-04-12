@@ -87,9 +87,12 @@
         }
     </style>
     <script>
-        let selectedCOs = JSON.parse(localStorage.getItem("selectedCOs")) || {};
-        let questionMarks = JSON.parse(localStorage.getItem("questionMarks")) || {};
-        let coWeights = JSON.parse(localStorage.getItem("coWeights")) || { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
+        // Use page-specific keys for localStorage
+        const PAGE_ID = "WL1";
+        
+        let selectedCOs = JSON.parse(localStorage.getItem(`selectedCOs_${PAGE_ID}`)) || {};
+        let questionMarks = JSON.parse(localStorage.getItem(`questionMarks_${PAGE_ID}`)) || {};
+        let coWeights = JSON.parse(localStorage.getItem(`coWeights_${PAGE_ID}`)) || { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
 
         function toggleSelection(question, co, checkbox) {
             let marks = document.querySelector(`tr[data-question='${question}'] select`).value;
@@ -130,9 +133,9 @@
                 }
                 questionMarks[qId] = markValue;
             });
-            localStorage.setItem("selectedCOs", JSON.stringify(selectedCOs));
-            localStorage.setItem("questionMarks", JSON.stringify(questionMarks));
-            localStorage.setItem("coWeights", JSON.stringify(coWeights));
+            localStorage.setItem(`selectedCOs_${PAGE_ID}`, JSON.stringify(selectedCOs));
+            localStorage.setItem(`questionMarks_${PAGE_ID}`, JSON.stringify(questionMarks));
+            localStorage.setItem(`coWeights_${PAGE_ID}`, JSON.stringify(coWeights));
             updateCOWeights();
         }
 
@@ -154,8 +157,20 @@
         }
 
         function resetAll() {
-            localStorage.clear();
-            location.reload();
+            localStorage.removeItem(`selectedCOs_${PAGE_ID}`);
+            localStorage.removeItem(`questionMarks_${PAGE_ID}`);
+            localStorage.removeItem(`coWeights_${PAGE_ID}`);
+            selectedCOs = {};
+            questionMarks = {};
+            coWeights = { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.disabled = false;
+            });
+            document.querySelectorAll('select').forEach(select => {
+                select.value = 0;
+            });
+            updateCOWeights();
         }
 
         function saveAndProceed() {
@@ -176,9 +191,8 @@
             localStorage.setItem("usedCOs", JSON.stringify(usedCOs));
             
             saveSelections();
-            window.location.href = "CO_Calc.html";
+            window.location.href = "MST_CO_Calc.html";
         }
-
         function mainPage() {
             window.location.href = "index.html";
         }
@@ -211,6 +225,7 @@
                 // Reset the flag for future use
                 localStorage.setItem("resetPressed", "false");
             }
+            
             restoreSelections();
             updateCOWeights();
         };
@@ -252,7 +267,7 @@
         <button onclick="resetCO('CO4')">Reset CO4</button>
         <button onclick="resetCO('CO5')">Reset CO5</button>
         <button onclick="resetAll()">Reset All</button>
-        <button onclick="saveAndProceed()">Proceed Without Student List</button>
+        <button onclick="saveAndProceed()">Proceed Without Students List</button>
     </div>
 </body>
 </html>
