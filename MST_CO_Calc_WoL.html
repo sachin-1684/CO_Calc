@@ -90,8 +90,12 @@
         // Use page-specific keys for localStorage
         const PAGE_ID = "WL1";
         
+        // Initialize with default values: Q1-Q5 = 2, Q6-Q7 = 5
         let selectedCOs = JSON.parse(localStorage.getItem(`selectedCOs_${PAGE_ID}`)) || {};
-        let questionMarks = JSON.parse(localStorage.getItem(`questionMarks_${PAGE_ID}`)) || {};
+        let questionMarks = JSON.parse(localStorage.getItem(`questionMarks_${PAGE_ID}`)) || {
+            Q1: 2, Q2: 2, Q3: 2, Q4: 2, Q5: 2,
+            Q6: 5, Q7: 5
+        };
         let coWeights = JSON.parse(localStorage.getItem(`coWeights_${PAGE_ID}`)) || { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
 
         function toggleSelection(question, co, checkbox) {
@@ -161,14 +165,26 @@
             localStorage.removeItem(`questionMarks_${PAGE_ID}`);
             localStorage.removeItem(`coWeights_${PAGE_ID}`);
             selectedCOs = {};
-            questionMarks = {};
+            // Reset to default values
+            questionMarks = {
+                Q1: 2, Q2: 2, Q3: 2, Q4: 2, Q5: 2,
+                Q6: 5, Q7: 5
+            };
             coWeights = { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
             document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
                 checkbox.checked = false;
                 checkbox.disabled = false;
             });
             document.querySelectorAll('select').forEach(select => {
-                select.value = 0;
+                // Set default values based on question number
+                let question = select.closest('tr').getAttribute('data-question');
+                if (['Q1','Q2','Q3','Q4','Q5'].includes(question)) {
+                    select.value = 2;
+                } else if (['Q6','Q7'].includes(question)) {
+                    select.value = 5;
+                } else {
+                    select.value = 0;
+                }
             });
             updateCOWeights();
         }
@@ -193,6 +209,7 @@
             saveSelections();
             window.location.href = "MST_CO_Calc.html";
         }
+
         function mainPage() {
             window.location.href = "index.html";
         }
@@ -205,7 +222,18 @@
             });
             Object.keys(questionMarks).forEach(question => {
                 let select = document.querySelector(`tr[data-question='${question}'] select`);
-                if (select) select.value = questionMarks[question];
+                if (select) {
+                    // Set default values if not already set
+                    if (select.value === "0") {
+                        if (['Q1','Q2','Q3','Q4','Q5'].includes(question)) {
+                            select.value = 2;
+                        } else if (['Q6','Q7'].includes(question)) {
+                            select.value = 5;
+                        }
+                    } else {
+                        select.value = questionMarks[question];
+                    }
+                }
             });
         }
 
@@ -250,7 +278,9 @@
             <script>
                 const questions = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"];
                 questions.forEach(q => {
-                    document.write(`<tr data-question="${q}"><td>${q}</td><td><select onchange="saveSelections()">${Array.from({ length: 11 }, (_, i) => `<option value="${i}">${i}</option>`).join('')}</select></td>`);
+                    // Set default value based on question number
+                    let defaultValue = ['Q1','Q2','Q3','Q4','Q5'].includes(q) ? 2 : 5;
+                    document.write(`<tr data-question="${q}"><td>${q}</td><td><select onchange="saveSelections()">${Array.from({ length: 11 }, (_, i) => `<option value="${i}" ${i === defaultValue ? 'selected' : ''}>${i}</option>`).join('')}</select></td>`);
                     ["CO1", "CO2", "CO3", "CO4", "CO5"].forEach(co => {
                         document.write(`<td><input type='checkbox' data-question='${q}' data-co='${co}' onchange="toggleSelection('${q}', '${co}', this)"></td>`);
                     });

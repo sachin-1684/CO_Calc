@@ -173,22 +173,40 @@
                 coWeights: { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 },
                 resetPressed: "true"
             };
+            setDefaultMarks();
+            pageData.questionMarks = questionMarks;
             localStorage.setItem(pageId, JSON.stringify(pageData));
             localStorage.setItem("resetPressed", "true");
-            location.reload();
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.disabled = false;
+            });
+            document.querySelectorAll('select').forEach(select => {
+                let question = select.closest('tr').getAttribute('data-question');
+                select.value = questionMarks[question] || 0;
+            });
+            updateCOWeights();
+        }
+
+        function setDefaultMarks() {
+            if (Object.keys(questionMarks).length === 0) {
+                ["Q1", "Q2", "Q3", "Q4", "Q5"].forEach(q => questionMarks[q] = 2);
+                ["Q6", "Q7", "Q8", "Q9"].forEach(q => questionMarks[q] = 5);
+                ["Q10", "Q11", "Q12", "Q13"].forEach(q => questionMarks[q] = 10);
+            }
         }
 
         function saveAndProceed() {
-    if (Object.keys(selectedCOs).length < 13) {
-        alert("Please map all questions to a CO before submitting.");
-        return;
-    }
-    saveSelections();
-    // Store the question order explicitly
-    pageData.questionOrder = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Q11", "Q12", "Q13"];
-    localStorage.setItem(pageId, JSON.stringify(pageData));
-    window.location.href = `EST_CO_Calc_WL2.html?pageId=${pageId}`;
-}
+            if (Object.keys(selectedCOs).length < 13) {
+                alert("Please map all questions to a CO before submitting.");
+                return;
+            }
+            saveSelections();
+            // Store the question order explicitly
+            pageData.questionOrder = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Q11", "Q12", "Q13"];
+            localStorage.setItem(pageId, JSON.stringify(pageData));
+            window.location.href = `EST_CO_Calc_WL2.html?pageId=${pageId}`;
+        }
 
         function mainPage() {
             window.location.href = "index.html";
@@ -207,6 +225,13 @@
         }
 
         window.onload = function () {
+            setDefaultMarks();
+            document.querySelectorAll('select').forEach(select => {
+                let question = select.closest('tr').getAttribute('data-question');
+                if (questionMarks[question] !== undefined) {
+                    select.value = questionMarks[question];
+                }
+            });
             // Use resetPressed from pageData
             if (pageData.resetPressed === "false") {
                 document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
@@ -241,7 +266,7 @@
                 <th>CO5</th>
             </tr>
             <script>
-                const questions = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7","Q8","Q9","Q10","Q11","Q12","Q13"];
+                const questions = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Q11", "Q12", "Q13"];
                 questions.forEach(q => {
                     document.write(`<tr data-question="${q}"><td>${q}</td><td><select onchange="saveSelections()">${Array.from({ length: 11 }, (_, i) => `<option value="${i}">${i}</option>`).join('')}</select></td>`);
                     ["CO1", "CO2", "CO3", "CO4", "CO5"].forEach(co => {
