@@ -46,21 +46,38 @@
             font-size: 18px;
             font-weight: bold;
         }
-        .co-marks-box {
+        .co-marks-container {
             display: flex;
-            justify-content: space-around;
             flex-wrap: wrap;
-            padding: 10px;
-            background: #f1f1f1;
+            justify-content: space-around;
             margin-top: 20px;
-            border-radius: 8px;
         }
-        .co-marks-box p {
-            margin: 5px 10px;
-            font-size: 16px;
+        .co-card {
+            background: #cdc8ce;
+            border-radius: 50px;
+            padding: 10px;
+            margin: 10px;
+            min-width: 120px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .co-progress {
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .co-progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s;
         }
         .red-bold {
             color: red;
+            font-weight: bold;
+        }
+        .green-bold {
+            color: green;
             font-weight: bold;
         }
         button {
@@ -87,109 +104,126 @@
                 width: 95%;
                 padding: 15px;
             }
-            .co-marks-box {
-                flex-direction: column;
-                align-items: center;
+            .co-card {
+                min-width: 100%;
             }
         }
     </style>
     <script>
-        // Use the same PAGE_ID as in MST_CO_Calc_WL1.html
         const PAGE_ID = "WL3";
         
         let questionMarks = {};
         let selectedCOs = {};
         let coMarks = {};
-        let coWeights = {};
+        let coMaxMarks = {};
+        let totalQMarks = 0;
+        let totalObtainedMarks = 0;
 
         window.onload = function () {
-            // Load data using the same keys as MST_CO_Calc_WL1.html
+            // Load data from localStorage
             questionMarks = JSON.parse(localStorage.getItem(`questionMarks_${PAGE_ID}`)) || {};
             selectedCOs = JSON.parse(localStorage.getItem(`selectedCOs_${PAGE_ID}`)) || {};
-            coWeights = JSON.parse(localStorage.getItem(`coWeights_${PAGE_ID}`)) || {};
-
-            // Get all used COs from the selectedCOs
-            let usedCOs = new Set();
-            Object.values(selectedCOs).forEach(co => {
-                if (co) usedCOs.add(co);
-            });
             
-            // Initialize coMarks for used COs
-            Array.from(usedCOs).forEach(co => {
-                coMarks[co] = 0;
-            });
-
-            // Store used COs in localStorage for reference
-            localStorage.setItem("usedCOs", JSON.stringify(Array.from(usedCOs)));
-
-            createCOMarksDisplay();
+            // Initialize CO data
+            initializeCOData();
+            createCODisplay();
             populateTable();
         };
 
-        function createCOMarksDisplay() {
-            let usedCOs = JSON.parse(localStorage.getItem("usedCOs")) || [];
+        function initializeCOData() {
+            coMarks = {};
+            coMaxMarks = {};
+            totalQMarks = 0;
+            totalObtainedMarks = 0;
+            
+            // Calculate max marks and initialize obtained marks for each CO
+            for (let q in questionMarks) {
+                let co = selectedCOs[q];
+                if (co && co !== "Not Assigned") {
+                    coMaxMarks[co] = (coMaxMarks[co] || 0) + questionMarks[q];
+                    coMarks[co] = coMarks[co] || 0;
+                    totalQMarks += questionMarks[q];
+                }
+            }
+        }
+
+        function createCODisplay() {
             let container = document.getElementById("coMarksContainer");
             container.innerHTML = '';
             
-            usedCOs.forEach(co => {
-                let p = document.createElement("p");
-                p.innerHTML = `<b>${co} :</b> <span id="${co.toLowerCase()}Marks" class="red-bold">0</span>`;
-                container.appendChild(p);
-            });
+            // Create a card for each CO with progress bar
+            for (let co in coMaxMarks) {
+                let card = document.createElement("div");
+                card.className = "co-card";
+                
+                let percentage = 0;
+                if (coMaxMarks[co] > 0) {
+                    percentage = Math.round((coMarks[co] / coMaxMarks[co]) * 100);
+                }
+                
+                // Set progress bar color based on percentage
+                let progressColor = "#4CAF50"; // Green
+                if (percentage < 40) progressColor = "#f44336"; // Red
+                else if (percentage < 70) progressColor = "#FFC107"; // Yellow
+                
+                card.innerHTML = `
+                    <h3>${co}</h3>
+                    <p>Marks: <span class="green-bold">${coMarks[co]}</span>/<span class="red-bold">${coMaxMarks[co]}</span></p>
+                    <div class="co-progress">
+                        <div class="co-progress-bar" id="${co}-progress" style="width: ${percentage}%; background: ${progressColor}"></div>
+                    </div>
+                    <p>${percentage}%</p>
+                `;
+                container.appendChild(card);
+            }
         }
 
         function populateTable() {
             let tableBody = document.getElementById("coTableBody");
-            tableBody.innerHTML = ''; // Clear existing rows
-            let totalQMarks = 0;
-            let usedCOs = JSON.parse(localStorage.getItem("usedCOs")) || [];
-
-            // Create rows for all questions (Q1-Q7)
+            tableBody.innerHTML = '';
+            let usedCOs = Object.keys(coMaxMarks);
+            
+            // Create rows for all questions (Q1-Q13)
             for (let i = 1; i <= 13; i++) {
                 let q = `Q${i}`;
                 let maxMarks = questionMarks[q] || 0;
                 let co = selectedCOs[q] || "Not Assigned";
 
-                // Only include the row if its CO is in the usedCOs list
                 if (usedCOs.includes(co)) {
-                    totalQMarks += maxMarks;
                     let row = document.createElement("tr");
                     row.innerHTML = `
                         <td>${q}</td>
                         <td>${maxMarks}</td>
                         <td>${co}</td>
                         <td><input type="number" min="0" max="${maxMarks}" id="${q}_marks" oninput="updateCOMarks()"></td>
+                        
                     `;
                     tableBody.appendChild(row);
                 }
             }
             
-            document.getElementById("totalQMarks").innerText = totalQMarks-10;
+            document.getElementById("totalQMarks").innerText = `0/${totalQMarks-10}`;
+            document.getElementById("totalCOMarks").innerText = `0/${totalQMarks-10}`;
         }
 
         function updateCOMarks() {
-
             let q12Marks = Number(document.getElementById('Q12_marks')?.value) || 0;
             let q13Marks = Number(document.getElementById('Q13_marks')?.value) || 0;
             
             if (q12Marks > 0 && q13Marks > 0) {
                 alert("Overattempt detected! You cannot attempt both Q12 and Q13. Please attempt only one of them.");
-                // Reset both inputs
                 if (document.getElementById('Q12_marks')) document.getElementById('Q12_marks').value = '';
                 if (document.getElementById('Q13_marks')) document.getElementById('Q13_marks').value = '';
                 return;
             }
 
-
-
-            let totalCOMarks = 0;
-            let usedCOs = JSON.parse(localStorage.getItem("usedCOs")) || [];
+            totalObtainedMarks = 0;
             
-            // Reset coMarks for used COs
-            usedCOs.forEach(co => {
+            // Reset all CO marks
+            for (let co in coMarks) {
                 coMarks[co] = 0;
-            });
-
+            }
+            
             // Update marks for all questions
             for (let i = 1; i <= 13; i++) {
                 let q = `Q${i}`;
@@ -198,6 +232,7 @@
                     let marks = Number(inputElement.value) || 0;
                     let maxMarks = questionMarks[q] || 0;
                     let assignedCO = selectedCOs[q];
+                    let displayElement = document.getElementById(`${q}_display`);
 
                     if (marks > maxMarks) {
                         alert(`Marks for ${q} cannot exceed ${maxMarks}`);
@@ -205,33 +240,74 @@
                         marks = maxMarks;
                     }
 
-                    if (assignedCO && assignedCO !== "Not Assigned" && usedCOs.includes(assignedCO)) {
+                    if (displayElement) {
+                        displayElement.innerText = `${marks}/${maxMarks}`;
+                    }
+
+                    if (assignedCO && assignedCO !== "Not Assigned" && coMaxMarks[assignedCO]) {
                         coMarks[assignedCO] += marks;
                     }
-                    totalCOMarks += marks;
+                    totalObtainedMarks += marks;
                 }
             }
-
-            // Update display only for used COs
-            usedCOs.forEach(co => {
-                document.getElementById(`${co.toLowerCase()}Marks`).innerText = coMarks[co] || 0;
-            });
             
-            document.getElementById("totalCOMarks").innerText = totalCOMarks;
-            document.getElementById("totalQMarks").innerText = totalCOMarks;
+            // Update the display
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            // Update CO cards
+            for (let co in coMaxMarks) {
+                let percentage = 0;
+                if (coMaxMarks[co] > 0) {
+                    percentage = Math.round((coMarks[co] / coMaxMarks[co]) * 100);
+                }
+                
+                let progressElement = document.getElementById(`${co}-progress`);
+                if (progressElement) {
+                    // Set progress bar color based on percentage
+                    let progressColor = "#4CAF50"; // Green
+                    if (percentage < 40) progressColor = "#f44336"; // Red
+                    else if (percentage < 70) progressColor = "#FFC107"; // Yellow
+                    
+                    progressElement.style.width = `${percentage}%`;
+                    progressElement.style.background = progressColor;
+                    
+                    // Update the percentage text
+                    progressElement.parentElement.nextElementSibling.textContent = `${percentage}%`;
+                    
+                    // Update the marks display
+                    progressElement.parentElement.previousElementSibling.innerHTML = 
+                        `Marks: <span class="green-bold">${coMarks[co]}</span>/<span class="red-bold">${coMaxMarks[co]}</span>`;
+                }
+            }
+            
+            // Update totals
+            document.getElementById("totalQMarks").innerText = `${totalObtainedMarks}/${totalQMarks}`;
+            document.getElementById("totalCOMarks").innerText = `${totalObtainedMarks}/${totalQMarks}`;
         }
 
         function resetCOMarks() {
             document.querySelectorAll("input[type='number']").forEach(input => input.value = "");
             
-            let usedCOs = JSON.parse(localStorage.getItem("usedCOs")) || [];
-            usedCOs.forEach(co => {
+            // Reset all CO marks
+            for (let co in coMarks) {
                 coMarks[co] = 0;
-                document.getElementById(`${co.toLowerCase()}Marks`).innerText = 0;
-            });
+            }
+            totalObtainedMarks = 0;
             
-            document.getElementById("totalCOMarks").innerText = 0;
-            document.getElementById("totalQMarks").innerText = 0;
+            // Update the display
+            updateDisplay();
+            
+            // Reset question displays
+            for (let i = 1; i <= 13; i++) {
+                let q = `Q${i}`;
+                let displayElement = document.getElementById(`${q}_display`);
+                if (displayElement) {
+                    let maxMarks = questionMarks[q] || 0;
+                    displayElement.innerText = `0/${maxMarks}`;
+                }
+            }
         }
 
         function homePage() {
@@ -248,21 +324,23 @@
                 <th>Max Marks</th>
                 <th>CO Assigned</th>
                 <th>CO Marks</th>
+                <!-- <th>Marks Obtained</th> -->
             </tr>
             <tbody id="coTableBody"></tbody>
         </table>
-
+        <div class="co-marks-container" id="coMarksContainer">
+            <!-- CO cards with progress bars will be inserted here -->
+        </div>
         <div class="summary-box">
-            <p>Total Question Marks: <span id="totalQMarks" class="red-bold">0</span></p>
+            <p>Total Obtained Marks: <span id="totalQMarks" class="red-bold">0/0</span></p>
+            <!-- <p>Total CO Marks Assigned: <span id="totalCOMarks" class="red-bold">0/0</span></p> -->
         </div>
 
-        <div class="co-marks-box" id="coMarksContainer">
-            <!-- CO marks will be dynamically inserted here -->
-        </div>
+       
 
-        <div class="summary-box">
-            <p>Total CO Marks Assigned: <span id="totalCOMarks" class="red-bold">0</span></p>
-        </div>
+        <!-- <div class="summary-box">
+            <p>Total CO Marks Assigned: <span id="totalCOMarks" class="red-bold">0/0</span></p>
+        </div> -->
 
         <button onclick="resetCOMarks()">Reset CO Marks</button>
         <button onclick="homePage()" style="background-color: green; color: white; padding: 10px 20px; border: none; border-radius: 5px;">
