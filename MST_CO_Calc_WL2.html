@@ -123,51 +123,52 @@
             white-space: nowrap;
         }
         .co-cards {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            gap: 15px;
-            padding: 15px;
-            background: #e21c11;
-            margin: 15px 0;
-            border-radius: 8px;
-        }
-        .co-card {
-            
-            flex-wrap: wrap;
-            background: rgb(255, 255, 255);
-            border-radius: 15px;
-            padding: 15px;
-            width: 130px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: center;
-            margin: 10px;
-        }
-        .co-card h4 {
-            margin: 0 0 10px;
-            color: #090909;
-            font-size: 1.2rem;
-        }
-        .co-card p {
-            margin: 5px 0;
-            font-size: 1rem;
-            font-weight: bold;
-            flex-wrap: wrap;
-        }
-        .progress-bar {
-            flex-wrap: wrap;
-            width: 100%;
-            background: #ddd;
-            border-radius: 5px;
-            overflow: hidden;
-            height: 10px;
-            margin-top: 10px;
-        }
-        .progress {
-            height: 100%;
-            background: #4caf50;
-            transition: width 0.3s ease;
-        }
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* Center the cards */
+    gap: 15px;
+    padding: 15px;
+    background: #e21c11;
+    margin: 15px 0;
+    border-radius: 8px;
+}
+
+.co-card {
+    flex: 1 1 120px; /* Flexible width with a minimum of 120px */
+    max-width: 150px; /* Cap the maximum width */
+    background: rgb(255, 255, 255);
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+    margin: 5px; /* Reduced margin for better fit */
+}
+
+.co-card h4 {
+    margin: 0 0 10px;
+    color: #101010;
+    font-size: clamp(1rem, 3vw, 1.2rem); /* Responsive font size */
+}
+
+.co-card p {
+    margin: 5px 0;
+    font-size: clamp(0.9rem, 2.5vw, 1rem); /* Responsive font size */
+    font-weight: bold;
+}
+
+.progress-bar {
+    height: 20px;
+    background: #e0e0e0;
+    border-radius: 10px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background: #4caf50;
+    transition: width 0.3s ease;
+}
         .red-bold {
             color: red;
             font-weight: bold;
@@ -398,10 +399,33 @@
             .progress-details {
                 flex-direction: column;
             }
-            .co-card {
-                width: 20%;
-            }
+           
         }
+        @media (max-width: 480px) {
+         .co-cards {
+        gap: 10px; /* Reduce gap for smaller screens */
+        padding: 10px;
+         }
+
+        .co-card {
+        flex: 1 1 45%; /* Take up roughly half the width, accounting for gap */
+        max-width: 45%; /* Ensure it doesn't exceed half the container */
+        margin: 5px 0; /* Adjust margin for better spacing */
+        padding: 10px; /* Reduce padding for compactness */
+        }
+
+         .co-card h4 {
+        font-size: clamp(0.9rem, 2.5vw, 1rem); /* Smaller font on phones */
+         }
+
+         .co-card p {
+        font-size: clamp(0.8rem, 2vw, 0.9rem); /* Smaller font on phones */
+        }
+
+         .progress-bar {
+        height: 15px; /* Slightly smaller progress bar on phones */
+         }
+}
     </style>
     <!-- SheetJS library for Excel handling -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
