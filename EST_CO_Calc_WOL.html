@@ -122,7 +122,7 @@
                 checkbox.disabled = checkbox.getAttribute('data-co') !== selectedCo && checkbox.checked ? false : !!selectedCOs[question];
             });
         }
-
+  
         function saveSelections() {
             document.querySelectorAll("tr[data-question]").forEach(row => {
                 let qId = row.getAttribute("data-question");

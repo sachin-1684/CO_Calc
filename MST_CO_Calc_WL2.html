@@ -122,6 +122,47 @@
             font-size: clamp(14px, 2vw, 16px);
             white-space: nowrap;
         }
+        .co-cards {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            padding: 15px;
+            background: #e21c11;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        .co-card {
+            background: rgb(255, 255, 255);
+            border-radius: 15px;
+            padding: 15px;
+            width: 130px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .co-card h4 {
+            margin: 0 0 10px;
+            color: #090909;
+            font-size: 1.2rem;
+        }
+        .co-card p {
+            margin: 5px 0;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .progress-bar {
+            width: 100%;
+            background: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            height: 10px;
+            margin-top: 10px;
+        }
+        .progress {
+            height: 100%;
+            background: #4caf50;
+            transition: width 0.3s ease;
+        }
         .red-bold {
             color: red;
             font-weight: bold;
@@ -348,6 +389,9 @@
             .progress-details {
                 flex-direction: column;
             }
+            .co-card {
+                width: 100%;
+            }
         }
     </style>
     <!-- SheetJS library for Excel handling -->
@@ -446,12 +490,10 @@
         </div>
         <button onclick="submitStudentData()">Add Marks</button>
         <div class="summary-box">
-            <p>Total Questions Marks: <span id="totalMarksDisplay" class="red-bold">0/0</span></p>
+            <p>Total Obtained Marks: <span id="totalMarksDisplay" class="red-bold">0/0</span></p>
         </div>
         <div class="co-marks-box" id="coMarksContainer"></div>
-        <div class="summary-box">
-            <p>Total CO Marks Assigned: <span id="totalCOMarks" class="red-bold">0</span></p>
-        </div>
+        <div class="co-cards" id="coCardsContainer"></div>
         <div class="marks-upload-section">
             <h3>Upload Marks</h3>
             <div class="file-type-selector">
@@ -594,6 +636,7 @@
             document.getElementById("questionsTable").style.display = "table";
             updateCODisplay();
             updateTotalMarksDisplay();
+            updateCOCards();
         };
 
         // Load persisted student data
@@ -782,6 +825,7 @@
             currentStatus = document.getElementById("studentStatus").value;
             updateInputFields();
             updateCOMarks();
+            updateCOCards();
         }
 
         // Sort student list
@@ -1124,7 +1168,10 @@
                 let row = document.createElement("tr");
                 let input = document.createElement("input");
                 input.id = `${q}_marks`;
-                input.oninput = function() { updateCOMarks(); };
+                input.oninput = function() { 
+                    updateCOMarks(); 
+                    updateCOCards();
+                };
                 if (currentStatus === "A") {
                     input.type = "text";
                     input.value = "A";
@@ -1150,6 +1197,7 @@
             document.getElementById("questionsTable").style.display = "table";
             updateCODisplay();
             updateTotalMarksDisplay();
+            updateCOCards();
         }
 
         // Toggle select all
@@ -1193,6 +1241,56 @@
             });
         }
 
+        // Update CO cards
+        function updateCOCards() {
+            let coCardsContainer = document.getElementById("coCardsContainer");
+            coCardsContainer.innerHTML = "";
+            let coMarks = {};
+            let coMaxMarks = {};
+
+            // Initialize marks and max marks for each CO
+            activeCOs.forEach(co => {
+                coMarks[co] = 0;
+                coMaxMarks[co] = 0;
+            });
+
+            // Calculate total marks and max marks per CO
+            Object.keys(questionMarks).forEach(q => {
+                let assignedCO = selectedCOs[q];
+                if (assignedCO && assignedCO !== "Not Assigned" && activeCOs.has(assignedCO)) {
+                    let maxMarks = Number(questionMarks[q]) || 0;
+                    coMaxMarks[assignedCO] += maxMarks;
+                    if (currentStatus !== "A" && currentStatus !== "I") {
+                        let marks = Number(document.getElementById(`${q}_marks`).value) || 0;
+                        if (marks > maxMarks) {
+                            marks = maxMarks;
+                            document.getElementById(`${q}_marks`).value = maxMarks;
+                        }
+                        coMarks[assignedCO] += marks;
+                    }
+                }
+            });
+
+            // Create cards for each CO
+            let sortedCOs = Array.from(activeCOs).sort();
+            sortedCOs.forEach(co => {
+                let obtained = currentStatus === "A" ? "A" : (currentStatus === "I" ? "I" : coMarks[co]);
+                let max = coMaxMarks[co];
+                let percentage = (obtained !== "A" && obtained !== "I" && max > 0) ? (obtained / max * 100).toFixed(0) : 0;
+                let card = document.createElement("div");
+                card.className = "co-card";
+                card.innerHTML = `
+                    <h4>${co}</h4>
+                    <p>Marks: <span class="red-bold">${obtained}/${max}</span></p>
+                    <p>Progress: ${percentage}%</p>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: ${percentage}%"></div>
+                    </div>
+                `;
+                coCardsContainer.appendChild(card);
+            });
+        }
+
         // Update CO marks
         function updateCOMarks() {
             let totalObtainedMarks = 0;
@@ -1210,9 +1308,8 @@
                 activeCOs.forEach(co => {
                     document.getElementById(`${co.toLowerCase()}Marks`).innerText = "A";
                 });
-                document.getElementById("totalCOMarks").innerText = "A";
+                // document.getElementById("totalCOMarks").innerText = "A";
                 document.getElementById("totalMarksDisplay").innerText = `A/${totalQMarks}`;
-                return;
             } else if (currentStatus === "I") {
                 Object.keys(questionMarks).forEach(q => {
                     let assignedCO = selectedCOs[q];
@@ -1223,9 +1320,8 @@
                 activeCOs.forEach(co => {
                     document.getElementById(`${co.toLowerCase()}Marks`).innerText = "I";
                 });
-                document.getElementById("totalCOMarks").innerText = "I";
+                // document.getElementById("totalCOMarks").innerText = "I";
                 document.getElementById("totalMarksDisplay").innerText = `I/${totalQMarks}`;
-                return;
             } else {
                 Object.keys(questionMarks).forEach(q => {
                     let marks = Number(document.getElementById(`${q}_marks`).value) || 0;
@@ -1244,9 +1340,10 @@
                 activeCOs.forEach(co => {
                     document.getElementById(`${co.toLowerCase()}Marks`).innerText = coMarks[co];
                 });
-                document.getElementById("totalCOMarks").innerText = Object.values(coMarks).reduce((a, b) => a + b, 0);
+                // document.getElementById("totalCOMarks").innerText = Object.values(coMarks).reduce((a, b) => a + b, 0);
                 document.getElementById("totalMarksDisplay").innerText = `${totalObtainedMarks}/${totalQMarks}`;
             }
+            updateCOCards();
         }
 
         // Update total marks display
@@ -1395,6 +1492,7 @@
             editMode = true;
             currentEditIndex = index;
             updateCOMarks();
+            updateCOCards();
             document.getElementById("currentStudent").innerHTML = 
                 `<span style="color: blue;">Editing: ${student.Name} (${student.UID}) - Status: ${student.Status || "P"}</span>`;
         }
@@ -1451,6 +1549,7 @@
             document.getElementById("studentStatus").value = "P";
             currentStatus = "P";
             updateCOMarks();
+            updateCOCards();
         }
 
         // Reset page
@@ -1476,6 +1575,7 @@
                     document.getElementById("duplicateWarning").style.display = "none";
                     updateSubmittedList();
                     updateProgressSummary();
+                    updateCOCards();
                     alert("Page has been completely reset. All student-related data has been cleared.");
                 } catch (e) {
                     console.error("Error resetting page:", e);
