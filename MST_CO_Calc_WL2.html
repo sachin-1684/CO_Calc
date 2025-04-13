@@ -113,7 +113,7 @@
             justify-content: center;
             gap: 10px;
             padding: 10px;
-            background: #f1f1f1;
+            background: #11cddb;
             margin: 15px 0;
             border-radius: 8px;
         }
@@ -125,7 +125,7 @@
         .co-cards {
             display: flex;
             flex-wrap: wrap;
-            justify-content: center;
+            justify-content: space-around;
             gap: 15px;
             padding: 15px;
             background: #e21c11;
@@ -141,6 +141,7 @@
             width: 130px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             text-align: center;
+            margin: 10px;
         }
         .co-card h4 {
             margin: 0 0 10px;
@@ -151,8 +152,10 @@
             margin: 5px 0;
             font-size: 1rem;
             font-weight: bold;
+            flex-wrap: wrap;
         }
         .progress-bar {
+            flex-wrap: wrap;
             width: 100%;
             background: #ddd;
             border-radius: 5px;
@@ -361,6 +364,10 @@
         }
         .file-type-selector input {
             margin-right: 5px;
+        }
+        .green-bold {
+            color: green;
+            font-weight: bold;
         }
         @media (min-width: 768px) {
             .student-management {
@@ -1283,11 +1290,12 @@
                 card.className = "co-card";
                 card.innerHTML = `
                     <h4>${co}</h4>
-                    <p>Marks: <span class="red-bold">${obtained}/${max}</span></p>
-                    <p>Progress: ${percentage}%</p>
+                    <p>Marks: <span class="green-bold">${obtained}</span><span class="red-bold">/${max}</span></p>
+                   
                     <div class="progress-bar">
                         <div class="progress" style="width: ${percentage}%"></div>
                     </div>
+                     <p> ${percentage}%</p>
                 `;
                 coCardsContainer.appendChild(card);
             });
