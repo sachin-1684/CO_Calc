@@ -1261,17 +1261,13 @@ function updateUIAfterUndo() {
         initializeDefaultQuestions();
     }
     questionOrder.forEach(q => {
-        if (!questionMarks[q]) return; // Skip if question not in data
+        if (!questionMarks[q]) return;
         let maxMarks = Number(questionMarks[q]) || 0;
         totalQMarks += maxMarks;
         let co = selectedCOs[q] || "Not Assigned";
         let row = document.createElement("tr");
         let input = document.createElement("input");
         input.id = `${q}_marks`;
-        input.oninput = function() { 
-            updateCOMarks(); 
-            updateCOCards();
-        };
         if (currentStatus === "A") {
             input.type = "text";
             input.value = "A";
@@ -1282,8 +1278,19 @@ function updateUIAfterUndo() {
             input.readOnly = true;
         } else {
             input.type = "number";
+            input.readOnly = false;
             input.min = "0";
             input.max = maxMarks;
+            input.value = "";
+            // Prevent negative values and show alert
+            input.oninput = function() {
+                if (this.value < 0) {
+                    alert("Negative marks are not allowed!");
+                    this.value = 0;
+                }
+                updateCOMarks();
+                updateCOCards();
+            };
         }
         row.innerHTML = `
             <td>${q}</td>
@@ -1299,7 +1306,6 @@ function updateUIAfterUndo() {
     updateCOCards();
     updateTotalMarksDisplay();
 }
-
         // Toggle select all
         function toggleSelectAll(selectAllCheckbox) {
             let checkboxes = document.querySelectorAll('#submittedList input[type="checkbox"]');
@@ -1314,7 +1320,40 @@ function updateUIAfterUndo() {
             });
             updateSelectAllCheckbox();
         }
-
+        document.addEventListener('keydown', function(event) {
+    if (event.ctrlKey && event.key === 's') {
+        event.preventDefault();
+        submitStudentData();
+    } else if (event.ctrlKey && event.key === 'z') {
+        event.preventDefault();
+        undoLastAction();
+    }
+    else if (event.ctrlKey && event.key === 'd') {
+        event.preventDefault();
+        deleteStudentList();
+    }
+    else if (event.altKey && event.key === 's') {
+        event.preventDefault();
+        analyzeLearners('slow');
+    }
+    else if (event.altKey && event.key === 'f') {
+        event.preventDefault();
+        analyzeLearners('fast');
+    }
+    else if (event.ctrlKey && event.key === 'r') {
+        event.preventDefault();
+        resetPage();
+    }
+    else if (event.ctrlKey && event.key === 'u') {
+        event.preventDefault();
+       uploadStudentList();
+    }
+    else if (event.altKey && event.key === 'd') {
+        event.preventDefault();
+        downloadLearnerResults();
+    }
+    
+}); 
         // Update select all checkbox
         function updateSelectAllCheckbox() {
             let checkboxes = document.querySelectorAll('#submittedList input[type="checkbox"]');
