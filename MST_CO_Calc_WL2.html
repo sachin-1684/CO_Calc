@@ -446,7 +446,7 @@
                 <div id="studentListContainer" class="student-list" style="display: none;">
                     <h3>Uploaded Students</h3>
                     <button onclick="deleteStudentList()" class="delete-btn" style="margin-bottom: 8px;">Delete List</button>
-                    <button onclick="sortStudentList()" class="delete-btn" style="margin-bottom: 8px;">Sort by UID</button>
+                    <!-- <button onclick="sortStudentList()" class="delete-btn" style="margin-bottom: 8px;">Sort by UID</button> -->
                     <div id="studentList"></div>
                 </div>
                 <div class="learner-analysis-section" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
@@ -550,7 +550,7 @@
                     <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)"> Select All
                 </label>
                 <button onclick="deleteSelectedStudents()" class="delete-btn">Delete Selected</button>
-                <button onclick="sortSubmittedStudents()" class="delete-btn" style="margin-left: 8px;">Sort by UID</button>
+                <!-- <button onclick="sortSubmittedStudents()" class="delete-btn" style="margin-left: 8px;">Sort by UID</button> -->
             </div>
             <div style="overflow-x: auto;">
                 <div id="submittedList"></div>
@@ -691,7 +691,7 @@
         // Initialize default questions if no data
         function initializeDefaultQuestions() {
             questionMarks = {
-                "Q1": 0, "Q2": 0, "Q3": 0, "Q4": 0, "Q5": 0, "Q6": 0, "Q7": 0
+                "Q1": 0, "Q2": 0, "Q3": 0, "Q4": 0, "Q5": 0, "Q6": 0, "Q7": 0, "Q8": 0, "Q9": 0, "Q10": 0, "Q11": 0, "Q12": 0, "Q13": 0
             };
             selectedCOs = {};
             coWeights = { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
