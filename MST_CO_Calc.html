@@ -112,6 +112,7 @@
     </style>
     <script>
         const PAGE_ID = "WL1";
+        const fixedCOOrder = ["CO1", "CO2", "CO3", "CO4", "CO5"]; // Define fixed CO order
         
         let questionMarks = {};
         let selectedCOs = {};
@@ -137,12 +138,17 @@
             totalQMarks = 0;
             totalObtainedMarks = 0;
             
-            // Calculate max marks and initialize obtained marks for each CO
+            // Initialize all COs in the fixed order, even if they have zero marks
+            fixedCOOrder.forEach(co => {
+                coMarks[co] = 0;
+                coMaxMarks[co] = 0;
+            });
+            
+            // Calculate max marks for each CO based on question assignments
             for (let q in questionMarks) {
                 let co = selectedCOs[q];
-                if (co) {
+                if (co && fixedCOOrder.includes(co)) {
                     coMaxMarks[co] = (coMaxMarks[co] || 0) + questionMarks[q];
-                    coMarks[co] = coMarks[co] || 0;
                     totalQMarks += questionMarks[q];
                 }
             }
@@ -152,31 +158,34 @@
             let container = document.getElementById("coMarksContainer");
             container.innerHTML = '';
             
-            // Create a card for each CO with progress bar
-            for (let co in coMaxMarks) {
-                let card = document.createElement("div");
-                card.className = "co-card";
-                
-                let percentage = 0;
+            // Create cards in the fixed CO order
+            fixedCOOrder.forEach(co => {
+                // Only create card if the CO has max marks > 0
                 if (coMaxMarks[co] > 0) {
-                    percentage = Math.round((coMarks[co] / coMaxMarks[co]) * 100);
+                    let card = document.createElement("div");
+                    card.className = "co-card";
+                    
+                    let percentage = 0;
+                    if (coMaxMarks[co] > 0) {
+                        percentage = Math.round((coMarks[co] / coMaxMarks[co]) * 100);
+                    }
+                    
+                    // Set progress bar color based on percentage
+                    let progressColor = "#4CAF50"; // Green
+                    if (percentage < 40) progressColor = "#f44336"; // Red
+                    else if (percentage < 70) progressColor = "#FFC107"; // Yellow
+                    
+                    card.innerHTML = `
+                        <h3>${co}</h3>
+                        <p>Marks: <span class="green-bold">${coMarks[co]}</span>/<span class="red-bold">${coMaxMarks[co]}</span></p>
+                        <div class="co-progress">
+                            <div class="co-progress-bar" id="${co}-progress" style="width: ${percentage}%; background: ${progressColor}"></div>
+                        </div>
+                        <p>${percentage}%</p>
+                    `;
+                    container.appendChild(card);
                 }
-                
-                // Set progress bar color based on percentage
-                let progressColor = "#4CAF50"; // Green
-                if (percentage < 40) progressColor = "#f44336"; // Red
-                else if (percentage < 70) progressColor = "#FFC107"; // Yellow
-                
-                card.innerHTML = `
-                    <h3>${co}</h3>
-                    <p>Marks: <span class="green-bold">${coMarks[co]}</span>/<span class="red-bold">${coMaxMarks[co]}</span></p>
-                    <div class="co-progress">
-                        <div class="co-progress-bar" id="${co}-progress" style="width: ${percentage}%; background: ${progressColor}"></div>
-                    </div>
-                    <p>${percentage}%</p>
-                `;
-                container.appendChild(card);
-            }
+            });
         }
 
         function populateTable() {
@@ -189,7 +198,8 @@
                 let maxMarks = questionMarks[q] || 0;
                 let co = selectedCOs[q] || "Not Assigned";
 
-                if (co !== "Not Assigned") {
+                // Only show rows for questions assigned to COs in our fixed order
+                if (fixedCOOrder.includes(co)) {
                     let row = document.createElement("tr");
                     row.innerHTML = `
                         <td>${q}</td>
@@ -209,9 +219,9 @@
             totalObtainedMarks = 0;
             
             // Reset all CO marks
-            for (let co in coMarks) {
+            fixedCOOrder.forEach(co => {
                 coMarks[co] = 0;
-            }
+            });
             
             // Update marks for all questions
             for (let i = 1; i <= 7; i++) {
@@ -228,7 +238,7 @@
                         marks = maxMarks;
                     }
 
-                    if (assignedCO && assignedCO !== "Not Assigned") {
+                    if (assignedCO && fixedCOOrder.includes(assignedCO)) {
                         coMarks[assignedCO] += marks;
                     }
                     totalObtainedMarks += marks;
@@ -240,31 +250,30 @@
         }
 
         function updateDisplay() {
-            // Update CO cards
-            for (let co in coMaxMarks) {
-                let percentage = 0;
+            // Update CO cards in the fixed order
+            fixedCOOrder.forEach(co => {
                 if (coMaxMarks[co] > 0) {
-                    percentage = Math.round((coMarks[co] / coMaxMarks[co]) * 100);
+                    let percentage = Math.round((coMarks[co] / coMaxMarks[co]) * 100);
+                    
+                    let progressElement = document.getElementById(`${co}-progress`);
+                    if (progressElement) {
+                        // Set progress bar color based on percentage
+                        let progressColor = "#4CAF50"; // Green
+                        if (percentage < 40) progressColor = "#f44336"; // Red
+                        else if (percentage < 70) progressColor = "#FFC107"; // Yellow
+                        
+                        progressElement.style.width = `${percentage}%`;
+                        progressElement.style.background = progressColor;
+                        
+                        // Update the percentage text
+                        progressElement.parentElement.nextElementSibling.textContent = `${percentage}%`;
+                        
+                        // Update the marks display
+                        progressElement.parentElement.previousElementSibling.innerHTML = 
+                            `Marks: <span class="green-bold">${coMarks[co]}</span>/<span class="red-bold">${coMaxMarks[co]}</span>`;
+                    }
                 }
-                
-                let progressElement = document.getElementById(`${co}-progress`);
-                if (progressElement) {
-                    // Set progress bar color based on percentage
-                    let progressColor = "#4CAF50"; // Green
-                    if (percentage < 40) progressColor = "#f44336"; // Red
-                    else if (percentage < 70) progressColor = "#FFC107"; // Yellow
-                    
-                    progressElement.style.width = `${percentage}%`;
-                    progressElement.style.background = progressColor;
-                    
-                    // Update the percentage text
-                    progressElement.parentElement.nextElementSibling.textContent = `${percentage}%`;
-                    
-                    // Update the marks display
-                    progressElement.parentElement.previousElementSibling.innerHTML = 
-                        `Marks: <span class="green-bold">${coMarks[co]}</span>/<span class="red-bold">${coMaxMarks[co]}</span>`;
-                }
-            }
+            });
             
             // Update totals
             document.getElementById("totalQMarksDisplay").innerText = `${totalObtainedMarks}/${totalQMarks}`;
@@ -275,9 +284,9 @@
             document.querySelectorAll("input[type='number']").forEach(input => input.value = "");
             
             // Reset all CO marks
-            for (let co in coMarks) {
+            fixedCOOrder.forEach(co => {
                 coMarks[co] = 0;
-            }
+            });
             totalObtainedMarks = 0;
             
             // Update the display
@@ -303,18 +312,11 @@
         </table>
 
         <div class="co-marks-container" id="coMarksContainer">
-            <!-- CO cards with progress bars will be inserted here -->
+            <!-- CO cards with progress bars will be inserted here in CO1-CO5 order -->
         </div>
         <div class="summary-box">
             <p>Total Obtained Marks: <span id="totalQMarksDisplay" class="red-bold">0/0</span></p>
-            <!-- <p>Total CO Marks Assigned: <span id="totalCOMarks" class="red-bold">0/0</span></p> -->
         </div>
-
-       
-
-        <!-- <div class="summary-box">
-            <p>Total CO Marks Assigned: <span id="totalCOMarks" class="red-bold">0/0</span></p>
-        </div> -->
 
         <button onclick="resetCOMarks()">Reset CO Marks</button>
         <button onclick="homePage()" style="background-color: green; color: white; padding: 10px 20px; border: none; border-radius: 5px;">
